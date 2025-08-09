@@ -90,7 +90,6 @@ project "GLFW"
 
 	filter "system:linux"
 		pic "On"
-
 		systemversion "latest"
 		
 		files
@@ -178,7 +177,21 @@ project "GLFW"
 		defines 
 		{ 
 			"_GLFW_WIN32",
-			"_CRT_SECURE_NO_WARNINGS"
+			"_CRT_SECURE_NO_WARNINGS",
+		}
+
+		links
+		{
+			"gdi32",
+			"user32",
+			"kernel32",
+			"shell32",
+			"msvcrt"
+		}
+
+		linkoptions
+		{
+			"/NODEFAULTLIB:library"
 		}
 
 	filter "configurations:Debug"
@@ -204,7 +217,7 @@ group ""
 
 project "Donut"
 	kind "ConsoleApp"
-	language "C"
+	language "C++"
 	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -218,7 +231,7 @@ project "Donut"
 	files
 	{
 		"src/**.h",
-		"src/**.c"
+		"src/**.cpp"
 	}
 
 	includedirs
@@ -232,7 +245,6 @@ project "Donut"
     {
         "GLFW",
         "GLAD",
-		"opengl32.lib"
     }
 
 	filter "system:windows"
@@ -240,6 +252,21 @@ project "Donut"
         defines
 		{
 			"GLFW_INCLUDE_NONE"
+		}
+		
+		links
+		{
+			"gdi32",
+			"user32",
+			"kernel32",
+			"shell32",
+			"opengl32",
+			"msvcrt"
+		}
+
+		linkoptions
+		{
+			"/NODEFAULTLIB:library"
 		}
 		
 	filter "configurations:Debug"
