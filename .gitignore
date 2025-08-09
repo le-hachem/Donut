@@ -1,0 +1,11 @@
+bin/
+bin-int/
+
+build/
+builddir/
+
+.vs/
+.vscode/
+
+*.make
+Makefile
