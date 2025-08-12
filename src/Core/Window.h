@@ -15,16 +15,24 @@ namespace Donut
         ~Window();
 
         bool ShouldClose() const;
-        void OnUpdate() const;
+        void OnUpdate()    const;
 
-        void SetEventCallback(const EventCallbackFn& callback) { m_EventHandler.SetEventCallback(callback); }
+        void SetEventCallback(const EventCallbackFn& callback)
+        {
+            m_EventHandler.SetEventCallback(callback);
+        }
+
         EventHandler& GetEventHandler() { return m_EventHandler; }
 
-        unsigned int GetWidth() const { return m_Width; }
+        unsigned int GetWidth()  const { return m_Width; }
         unsigned int GetHeight() const { return m_Height; }
 
         void* GetNativeWindow() const { return m_Window; }
 
+        void SetCursorLocked(bool locked);
+        void SetCursorVisible(bool visible);
+        bool IsCursorLocked()  const { return m_CursorLocked; }
+        bool IsCursorVisible() const { return m_CursorVisible; }
     private:
         void Init();
         void Shutdown();
@@ -39,7 +47,6 @@ namespace Donut
         static void GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
         static void GLFWMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
         static void GLFWCursorPosCallback(GLFWwindow* window, double xPos, double yPos);
-
     private:
         GLFWwindow* m_Window;
         EventHandler m_EventHandler;
@@ -48,5 +55,7 @@ namespace Donut
         unsigned int m_Width;
         unsigned int m_Height;
         bool m_IsClosed;
+        bool m_CursorLocked  = false;
+        bool m_CursorVisible = true;
     };
 }

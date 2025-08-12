@@ -44,7 +44,6 @@ namespace Donut
 
         glfwMakeContextCurrent(m_Window);
         
-        // Initialize GLAD
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             std::cout << "Failed to initialize GLAD!" << std::endl;
@@ -89,6 +88,24 @@ namespace Donut
     bool Window::ShouldClose() const
     {
         return glfwWindowShouldClose(m_Window) || m_IsClosed;
+    }
+
+    void Window::SetCursorLocked(bool locked)
+    {
+        m_CursorLocked = locked;
+        if (locked)
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
+    void Window::SetCursorVisible(bool visible)
+    {
+        m_CursorVisible = visible;
+        if (visible)
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     }
 
     void Window::GLFWErrorCallback(int error, const char* description)

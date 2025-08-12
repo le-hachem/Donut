@@ -39,7 +39,7 @@ namespace Donut
                 element.type,
                 element.normalized ? GL_TRUE : GL_FALSE,
                 layout.GetStride(),
-                (const void*)element.offset);
+                reinterpret_cast<const   void*>(static_cast<uintptr_t>(element.offset)));
             m_VertexBufferIndex++;
         }
 

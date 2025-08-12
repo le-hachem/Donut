@@ -2,6 +2,7 @@
 
 #include "Window.h"
 #include "Event.h"
+#include "Camera.h"
 #include <memory>
 #include <functional>
 
@@ -42,6 +43,17 @@ namespace Donut
         std::shared_ptr<VertexBuffer> m_VertexBuffer;
         std::shared_ptr<IndexBuffer> m_IndexBuffer;
         std::shared_ptr<Shader> m_Shader;
+        
+        std::unique_ptr<Camera> m_Camera;
+        
+        // Input state
+        bool m_Keys[1024] = { false };
+        bool m_FirstMouse = true;
+        float m_LastX = 0.0f;
+        float m_LastY = 0.0f;
+        float m_DeltaTime = 0.0f;
+        float m_LastFrame = 0.0f;
+        bool m_MouseDragging = false;
 
         static Application* s_Instance;
     };

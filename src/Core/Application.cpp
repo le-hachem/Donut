@@ -9,6 +9,7 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <GLFW/glfw3.h>
 
 namespace Donut
 {
@@ -70,14 +71,78 @@ namespace Donut
             else
                 m_Minimized = false;
             
+            if (m_Camera)
+                m_Camera->SetProjection(45.0f, (float)e.GetWidth() / (float)e.GetHeight(), 0.1f, 100.0f);
+            
+            event.Handled = true;
+            return true;
+        });
+        
+        dispatcher.Dispatch<WindowFocusEvent>([this, &event](WindowFocusEvent& e) 
+        {
+            m_FirstMouse = true;
+            m_MouseDragging = false;
+            event.Handled = true;
+            return true;
+        });
+        
+        dispatcher.Dispatch<WindowLostFocusEvent>([this, &event](WindowLostFocusEvent& e) 
+        {
+            m_MouseDragging = false;
             event.Handled = true;
             return true;
         });
         
         dispatcher.Dispatch<KeyPressedEvent>([this, &event](KeyPressedEvent& e) 
         {
-            if (e.GetKeyCode() == 256)
-                Close();
+            m_Keys[e.GetKeyCode()] = true;
+            return true;
+        });
+        
+        dispatcher.Dispatch<KeyReleasedEvent>([this, &event](KeyReleasedEvent& e) 
+        {
+            m_Keys[e.GetKeyCode()] = false;
+            return true;
+        });
+        
+        dispatcher.Dispatch<MouseMovedEvent>([this, &event](MouseMovedEvent& e) 
+        {
+            if (!m_MouseDragging)
+                return true;
+                
+            if (m_FirstMouse)
+            {
+                m_LastX = e.GetX();
+                m_LastY = e.GetY();
+                m_FirstMouse = false;
+            }
+
+            float xOffset = m_LastX - e.GetX();
+            float yOffset = e.GetY() - m_LastY;
+
+            m_LastX = e.GetX();
+            m_LastY = e.GetY();
+
+            if (m_Camera)
+                m_Camera->OnMouseMove(xOffset, yOffset);
+            
+            return true;
+        });
+        
+        dispatcher.Dispatch<MouseButtonPressedEvent>([this, &event](MouseButtonPressedEvent& e) 
+        {
+            if (e.GetMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
+            {
+                m_MouseDragging = true;
+                m_FirstMouse = true;
+            }
+            return true;
+        });
+        
+        dispatcher.Dispatch<MouseButtonReleasedEvent>([this, &event](MouseButtonReleasedEvent& e) 
+        {
+            if (e.GetMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
+                m_MouseDragging = false;
             return true;
         });
     }
@@ -86,14 +151,32 @@ namespace Donut
     { 
         Renderer::Init();
 
-        float vertices[3 * 7] = 
+        m_Camera = std::make_unique<Camera>(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f);
+        m_Camera->SetPosition({ 0.0f, 0.0f, 3.0f });
+        m_Camera->SetMouseSensitivity(0.1f);
+        m_Camera->SetMovementSpeed(5.0f);
+
+        float vertices[] = 
         {
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-             0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
+            -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  0.5f, 0.5f, 0.5f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f
         };
 
-        uint32_t indices[3] = { 0, 1, 2 };
+        uint32_t indices[] = 
+        {
+            0, 1, 2,  2, 3, 0,
+            1, 5, 6,  6, 2, 1,
+            5, 4, 7,  7, 6, 5,
+            4, 0, 3,  3, 7, 4,
+            3, 2, 6,  6, 7, 3,
+            4, 5, 1,  1, 0, 4 
+        };
 
         m_VertexArray = std::shared_ptr<VertexArray>(VertexArray::Create());
         m_VertexBuffer = std::shared_ptr<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
@@ -105,7 +188,7 @@ namespace Donut
 
         m_VertexArray->AddVertexBuffer(m_VertexBuffer);
 
-        m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 3));
+        m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 36));
         m_VertexArray->SetIndexBuffer(m_IndexBuffer);
 
         m_Shader = std::shared_ptr<Shader>(Shader::Create("assets/Basic.glsl"));
@@ -118,19 +201,55 @@ namespace Donut
 
     void Application::OnUpdate()
     {
+        float currentFrame = (float)glfwGetTime();
+        m_DeltaTime = currentFrame - m_LastFrame;
+        m_LastFrame = currentFrame;
+
+        if (m_Camera)
+        {
+            if (m_Keys[GLFW_KEY_W])
+                m_Camera->MoveForward(m_DeltaTime);
+            if (m_Keys[GLFW_KEY_S])
+                m_Camera->MoveBackward(m_DeltaTime);
+            if (m_Keys[GLFW_KEY_A])
+                m_Camera->MoveLeft(m_DeltaTime);
+            if (m_Keys[GLFW_KEY_D])
+                m_Camera->MoveRight(m_DeltaTime);
+            if (m_Keys[GLFW_KEY_SPACE])
+                m_Camera->MoveUp(m_DeltaTime);
+            if (m_Keys[GLFW_KEY_LEFT_SHIFT])
+                m_Camera->MoveDown(m_DeltaTime);
+        }
     }
 
     void Application::OnRender()
     {
-        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         Renderer::Clear();
 
-        Renderer::BeginScene();
-
-        glm::mat4 viewProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+        glm::mat4 viewProjection = m_Camera ? m_Camera->GetViewProjectionMatrix() : glm::mat4(1.0f);
         
-        Renderer::Submit(m_Shader, m_VertexArray, glm::mat4(1.0f));
-
-        Renderer::EndScene();
+        glm::vec3 centerPos(0.0f, 0.0f, 0.0f);
+        glm::vec3 rightPos(2.0f, 0.0f, 0.0f);
+        glm::vec3 leftPos(-2.0f, 0.0f, 0.0f);
+        glm::vec3 upPos(0.0f, 2.0f, 0.0f);
+        glm::vec3 downPos(0.0f, -2.0f, 0.0f);
+        glm::vec3 forwardPos(0.0f, 0.0f, 2.0f);
+        glm::vec3 backPos(0.0f, 0.0f, -2.0f);
+        
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), centerPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), rightPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), leftPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), upPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), downPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), forwardPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+        transform = glm::translate(glm::mat4(1.0f), backPos);
+        Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
     }
 }
