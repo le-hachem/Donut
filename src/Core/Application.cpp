@@ -5,6 +5,7 @@
 #include "Rendering/VertexBuffer.h"
 #include "Rendering/IndexBuffer.h"
 #include "Rendering/Shader.h"
+#include "Rendering/Texture.h"
 
 #include <iostream>
 #include <glm/glm.hpp>
@@ -70,6 +71,8 @@ namespace Donut
                 m_Minimized = true;
             else
                 m_Minimized = false;
+            
+            Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
             
             if (m_Camera)
                 m_Camera->SetProjection(45.0f, (float)e.GetWidth() / (float)e.GetHeight(), 0.1f, 100.0f);
@@ -150,6 +153,8 @@ namespace Donut
     void Application::OnInit()     
     { 
         Renderer::Init();
+        Renderer::OnWindowResize(1280, 720);
+        RenderCommand::SetFaceCulling(false);
 
         m_Camera = std::make_unique<Camera>(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f);
         m_Camera->SetPosition({ 0.0f, 0.0f, 3.0f });
@@ -158,14 +163,15 @@ namespace Donut
 
         float vertices[] = 
         {
-            -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.5f, 0.5f, 0.5f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f
+            // Position (3) | Color (4) | TexCoords (2)
+            -0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.0f, 1.0f,  0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  0.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 1.0f,  0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  0.5f, 0.5f, 0.5f, 1.0f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 1.0f
         };
 
         uint32_t indices[] = 
@@ -175,7 +181,7 @@ namespace Donut
             5, 4, 7,  7, 6, 5,
             4, 0, 3,  3, 7, 4,
             3, 2, 6,  6, 7, 3,
-            4, 5, 1,  1, 0, 4 
+            4, 5, 1,  1, 0, 4
         };
 
         m_VertexArray = std::shared_ptr<VertexArray>(VertexArray::Create());
@@ -184,6 +190,7 @@ namespace Donut
         VertexBufferLayout layout;
         layout.Push<float>(3);
         layout.Push<float>(4);
+        layout.Push<float>(2);
         m_VertexBuffer->SetLayout(layout);
 
         m_VertexArray->AddVertexBuffer(m_VertexBuffer);
@@ -191,7 +198,32 @@ namespace Donut
         m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 36));
         m_VertexArray->SetIndexBuffer(m_IndexBuffer);
 
-        m_Shader = std::shared_ptr<Shader>(Shader::Create("assets/Basic.glsl"));
+        m_Shader = std::shared_ptr<Shader>(Shader::Create("assets/Textured.glsl"));
+
+        m_Texture = Texture2D::Create(256, 256);
+        
+        uint32_t* pixelData = new uint32_t[256 * 256];
+        for (int y = 0; y < 256; y++)
+        {
+            for (int x = 0; x < 256; x++)
+            {
+                float u = (float)x / 256.0f;
+                float v = (float)y / 256.0f;
+                
+                float wave = sin(u * 10.0f) * cos(v * 10.0f);
+                wave = (wave + 1.0f) * 0.5f;
+                
+                uint8_t r = (uint8_t)(wave * 255);
+                uint8_t g = (uint8_t)((1.0f - wave) * 255);
+                uint8_t b = (uint8_t)((u + v) * 0.5f * 255);
+                uint8_t a = 255;
+                
+                pixelData[y * 256 + x] = (a << 24) | (b << 16) | (g << 8) | r;
+            }
+        }
+        
+        m_Texture->SetData(pixelData, 256 * 256 * 4);
+        delete[] pixelData;
     }
 
     void Application::OnShutdown() 
@@ -215,17 +247,25 @@ namespace Donut
                 m_Camera->MoveLeft(m_DeltaTime);
             if (m_Keys[GLFW_KEY_D])
                 m_Camera->MoveRight(m_DeltaTime);
-            if (m_Keys[GLFW_KEY_SPACE])
+            if (m_Keys[GLFW_KEY_SPACE]) 
                 m_Camera->MoveUp(m_DeltaTime);
             if (m_Keys[GLFW_KEY_LEFT_SHIFT])
-                m_Camera->MoveDown(m_DeltaTime);
+                m_Camera->MoveDown(m_DeltaTime);    
         }
+        
+        UpdateTexture();
     }
 
     void Application::OnRender()
     {
         Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         Renderer::Clear();
+
+        if (m_Texture)
+        {
+            m_Texture->Bind(0);
+            m_Shader->SetInt("u_Texture", 0);
+        }
 
         glm::mat4 viewProjection = m_Camera ? m_Camera->GetViewProjectionMatrix() : glm::mat4(1.0f);
         
@@ -251,5 +291,37 @@ namespace Donut
         Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
         transform = glm::translate(glm::mat4(1.0f), backPos);
         Renderer::Submit(m_Shader, m_VertexArray, transform, viewProjection);
+    }
+
+    void Application::UpdateTexture()
+    {
+        if (!m_Texture)
+            return;
+            
+        m_TextureTime += m_DeltaTime;
+        
+        uint32_t* pixelData = new uint32_t[256 * 256];
+        for (int y = 0; y < 256; y++)
+        {
+            for (int x = 0; x < 256; x++)
+            {
+                float time = m_TextureTime * 2.0f;
+                float u = (float)x / 256.0f;
+                float v = (float)y / 256.0f;
+                
+                float wave = sin(u * 10.0f + time) * cos(v * 10.0f + time * 0.5f);
+                wave = (wave + 1.0f) * 0.5f;
+                
+                uint8_t r = (uint8_t)(wave * 255);
+                uint8_t g = (uint8_t)((1.0f - wave) * 255);
+                uint8_t b = (uint8_t)((u + v) * 0.5f * 255);
+                uint8_t a = 255;
+                
+                pixelData[y * 256 + x] = (a << 24) | (b << 16) | (g << 8) | r;
+            }
+        }
+        
+        m_Texture->SetData(pixelData, 256 * 256 * 4);
+        delete[] pixelData;
     }
 }

@@ -8,6 +8,11 @@ namespace Donut
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
     }
 
     void OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
@@ -28,6 +33,18 @@ namespace Donut
     void OpenGLRendererAPI::EnableDepthTest()
     {
         glEnable(GL_DEPTH_TEST);
+    }
+
+    void OpenGLRendererAPI::SetFaceCulling(bool enabled)
+    {
+        if (enabled)
+        {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+        }
+        else
+            glDisable(GL_CULL_FACE);
     }
 
     void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)

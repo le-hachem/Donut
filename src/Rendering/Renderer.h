@@ -34,6 +34,7 @@ namespace Donut
         virtual void SetClearColor(const glm::vec4& color) = 0;
         virtual void Clear() = 0;
         virtual void EnableDepthTest() = 0;
+        virtual void SetFaceCulling(bool enabled) = 0;
 
         virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0) = 0;
 
@@ -70,6 +71,11 @@ namespace Donut
         inline static void EnableDepthTest()
         {
             s_RendererAPI->EnableDepthTest();
+        }
+
+        inline static void SetFaceCulling(bool enabled)
+        {
+            s_RendererAPI->SetFaceCulling(enabled);
         }
 
         inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0)

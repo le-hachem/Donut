@@ -12,6 +12,7 @@ namespace Donut
     class VertexBuffer;
     class IndexBuffer;
     class Shader;
+    class Texture2D;
 };
 
 namespace Donut
@@ -34,6 +35,7 @@ namespace Donut
         void OnUpdate();
         void OnRender();
         void OnEvent(Event& event);
+        void UpdateTexture();
     private:
         std::unique_ptr<Window> m_Window;
         bool m_Running;
@@ -43,10 +45,10 @@ namespace Donut
         std::shared_ptr<VertexBuffer> m_VertexBuffer;
         std::shared_ptr<IndexBuffer> m_IndexBuffer;
         std::shared_ptr<Shader> m_Shader;
+        std::shared_ptr<Texture2D> m_Texture;
         
         std::unique_ptr<Camera> m_Camera;
         
-        // Input state
         bool m_Keys[1024] = { false };
         bool m_FirstMouse = true;
         float m_LastX = 0.0f;
@@ -54,6 +56,7 @@ namespace Donut
         float m_DeltaTime = 0.0f;
         float m_LastFrame = 0.0f;
         bool m_MouseDragging = false;
+        float m_TextureTime = 0.0f;
 
         static Application* s_Instance;
     };
