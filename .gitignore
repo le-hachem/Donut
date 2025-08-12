@@ -9,3 +9,7 @@ builddir/
 
 *.make
 Makefile
+
+*.sln
+*.vcxproj
+*.vcxproj.*

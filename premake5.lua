@@ -25,8 +25,7 @@ group "Dependencies"
 project "GLAD"
     kind "StaticLib"
     language "C"
-    staticruntime "off"
-    
+    staticruntime "on"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -57,7 +56,7 @@ project "GLAD"
 project "GLFW"
 	kind "StaticLib"
 	language "C"
-	staticruntime "off"
+	staticruntime "on"
 	warnings "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -65,9 +64,6 @@ project "GLFW"
 
 	files
 	{
-		"Vendor/glfw/include/GLFW/glfw3.h",
-		"Vendor/glfw/include/GLFW/glfw3native.h",
-		
 		"Vendor/glfw/src/context.c",
 		"Vendor/glfw/src/init.c",
 		"Vendor/glfw/src/input.c",
@@ -180,20 +176,6 @@ project "GLFW"
 			"_CRT_SECURE_NO_WARNINGS",
 		}
 
-		links
-		{
-			"gdi32",
-			"user32",
-			"kernel32",
-			"shell32",
-			"msvcrt"
-		}
-
-		linkoptions
-		{
-			"/NODEFAULTLIB:library"
-		}
-
 	filter "configurations:Debug"
 		runtime "Debug"
 		symbols "on"
@@ -256,19 +238,9 @@ project "Donut"
 		
 		links
 		{
-			"gdi32",
-			"user32",
-			"kernel32",
-			"shell32",
-			"opengl32",
-			"msvcrt"
+			"opengl32.lib",
 		}
 
-		linkoptions
-		{
-			"/NODEFAULTLIB:library"
-		}
-		
 	filter "configurations:Debug"
 		defines "DONUT_DEBUG"
 		runtime "Debug"

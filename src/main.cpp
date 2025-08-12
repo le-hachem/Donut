@@ -1,11 +1,9 @@
-#include "Core/Window.h"
+#include "Core/Application.h"
 
 int main()
-{   
-    Donut::Window window("Donut", 1280, 720);
-
-    while (!window.ShouldClose())
-    {
-        window.OnUpdate();
-    }
+{
+    Donut::Application* app = new Donut::Application()  ;
+    app->Run();
+    delete app;
+    return 0;
 }
