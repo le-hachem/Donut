@@ -19,6 +19,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["glfw"] = "Vendor/glfw/include"
 IncludeDir["glad"] = "Vendor/glad/include"
+IncludeDir["glm"]  = "Vendor/glm"
 
 group "Dependencies"
 
@@ -212,6 +213,9 @@ project "Donut"
 
 	files
 	{
+		"Vendor/glm/glm/**.hpp",
+		"Vendor/glm/glm/**.inl",
+
 		"src/**.h",
 		"src/**.cpp"
 	}
@@ -219,8 +223,10 @@ project "Donut"
 	includedirs
 	{
 		"src",
+		
 		"%{IncludeDir.glfw}",
-		"%{IncludeDir.glad}"
+		"%{IncludeDir.glad}",
+		"%{IncludeDir.glm}"
 	}
 
     links

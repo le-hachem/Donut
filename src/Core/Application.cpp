@@ -1,5 +1,14 @@
 #include "Application.h"
+
+#include "Rendering/Renderer.h"
+#include "Rendering/VertexArray.h"
+#include "Rendering/VertexBuffer.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/Shader.h"
+
 #include <iostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Donut
 {
@@ -73,8 +82,39 @@ namespace Donut
         });
     }
 
-    void Application::OnInit()     { }
-    void Application::OnShutdown() { }
+    void Application::OnInit()     
+    { 
+        Renderer::Init();
+
+        float vertices[3 * 7] = 
+        {
+            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+             0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
+        };
+
+        uint32_t indices[3] = { 0, 1, 2 };
+
+        m_VertexArray = std::shared_ptr<VertexArray>(VertexArray::Create());
+        m_VertexBuffer = std::shared_ptr<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
+        
+        VertexBufferLayout layout;
+        layout.Push<float>(3);
+        layout.Push<float>(4);
+        m_VertexBuffer->SetLayout(layout);
+
+        m_VertexArray->AddVertexBuffer(m_VertexBuffer);
+
+        m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 3));
+        m_VertexArray->SetIndexBuffer(m_IndexBuffer);
+
+        m_Shader = std::shared_ptr<Shader>(Shader::Create("assets/Basic.glsl"));
+    }
+
+    void Application::OnShutdown() 
+    { 
+        Renderer::Shutdown();
+    }
 
     void Application::OnUpdate()
     {
@@ -82,5 +122,15 @@ namespace Donut
 
     void Application::OnRender()
     {
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+        Renderer::Clear();
+
+        Renderer::BeginScene();
+
+        glm::mat4 viewProjection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+        
+        Renderer::Submit(m_Shader, m_VertexArray, glm::mat4(1.0f));
+
+        Renderer::EndScene();
     }
 }

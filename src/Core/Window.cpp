@@ -1,6 +1,7 @@
 #include "Window.h"
 #include <cstdint>
 #include <iostream>
+#include <glad/glad.h>
 
 namespace Donut
 {
@@ -42,6 +43,15 @@ namespace Donut
         }
 
         glfwMakeContextCurrent(m_Window);
+        
+        // Initialize GLAD
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            std::cout << "Failed to initialize GLAD!" << std::endl;
+            glfwTerminate();
+            return;
+        }
+        
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetErrorCallback(GLFWErrorCallback);

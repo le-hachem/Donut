@@ -7,6 +7,14 @@
 
 namespace Donut
 {
+    class VertexArray;
+    class VertexBuffer;
+    class IndexBuffer;
+    class Shader;
+};
+
+namespace Donut
+{
     class Application
     {
     public:
@@ -29,6 +37,11 @@ namespace Donut
         std::unique_ptr<Window> m_Window;
         bool m_Running;
         bool m_Minimized;
+
+        std::shared_ptr<VertexArray> m_VertexArray;
+        std::shared_ptr<VertexBuffer> m_VertexBuffer;
+        std::shared_ptr<IndexBuffer> m_IndexBuffer;
+        std::shared_ptr<Shader> m_Shader;
 
         static Application* s_Instance;
     };
