@@ -16,6 +16,7 @@ namespace Donut
         void OnExit()                  override;
         void OnUpdate(float deltaTime) override;
         void OnRender()                override;
+        void OnImUIRender()            override;
         void OnEvent(Event& event)     override;
     };
 };

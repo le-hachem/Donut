@@ -13,6 +13,7 @@ namespace Donut
         virtual void OnExit()                  = 0;
         virtual void OnUpdate(float deltaTime) = 0;
         virtual void OnRender()                = 0;
+        virtual void OnImUIRender()            = 0;
         virtual void OnEvent(Event& event)     = 0;
     };
 };

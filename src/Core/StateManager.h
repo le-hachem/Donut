@@ -16,6 +16,7 @@ namespace Donut
         
         void Update(float deltaTime);
         void Render();
+        void OnImUIRender();
         void OnEvent(Event& event);
         
         void RegisterState(const std::string& stateName, Scope<State> state);

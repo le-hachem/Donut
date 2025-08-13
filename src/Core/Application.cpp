@@ -2,8 +2,8 @@
 
 #include "Rendering/Renderer.h"
 
-#include "States/ConfigState.h"
 #include "States/SimulationState.h"
+#include "States/ConfigState.h"
 
 #include <GLFW/glfw3.h>
 
@@ -86,12 +86,6 @@ namespace Donut
                 event.Handled = true;
                 return true;
             }
-            else if (e.GetKeyCode() == GLFW_KEY_3)
-            {
-                m_StateManager->SwitchToState("Menu");
-                event.Handled = true;
-                return true;
-            }
             
             return true;
         });
@@ -105,12 +99,13 @@ namespace Donut
         
         RendererAPI::SetAPI(RendererAPI::API::OpenGL);
         Renderer::Init();
+        m_Window->InitImGui();
         
         Renderer::OnWindowResize(1280, 720);
         RenderCommand::SetFaceCulling(false);
 
         m_StateManager = CreateScope<StateManager>();
-        m_StateManager->RegisterState("Config", CreateScope<ConfigState>());
+        m_StateManager->RegisterState("Config",     CreateScope<ConfigState>());
         m_StateManager->RegisterState("Simulation", CreateScope<SimulationState>());
         m_StateManager->SwitchToState("Config");
     }
@@ -136,5 +131,9 @@ namespace Donut
     void Application::OnRender()
     {
         m_StateManager->Render();
+        
+        m_Window->BeginImGuiFrame();
+        m_StateManager->OnImUIRender();
+        m_Window->EndImGuiFrame();
     }
 };

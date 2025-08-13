@@ -35,10 +35,15 @@ namespace Donut
         void SetCursorVisible(bool visible);
         bool IsCursorLocked()  const { return m_CursorLocked;  }
         bool IsCursorVisible() const { return m_CursorVisible; }
+    
+        void InitImGui();
+        void BeginImGuiFrame();
+        void EndImGuiFrame();
     private:
         void Init();
         void Shutdown();
-
+        void ShutdownImGui();
+        
         static void GLFWErrorCallback(int error, const char* description);
         static void GLFWWindowCloseCallback(GLFWwindow* window);
         static void GLFWWindowSizeCallback(GLFWwindow* window, int width, int height);

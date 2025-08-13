@@ -1,5 +1,8 @@
 #include "ConfigState.h"
 #include "Rendering/Renderer.h"
+#include "Core/Application.h"
+
+#include <imgui.h>
 
 namespace Donut
 {
@@ -25,5 +28,14 @@ namespace Donut
     
     void ConfigState::OnEvent(Event& event)
     {
+    }
+    
+    void ConfigState::OnImUIRender()
+    {
+        ImGui::Begin("Configuration");
+        ImGui::Text("Configuration State");
+        if (ImGui::Button("Start Simulation"))
+            Application::Get().GetStateManager().SwitchToState("Simulation");
+        ImGui::End();
     }
 }

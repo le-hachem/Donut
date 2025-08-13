@@ -74,6 +74,12 @@ namespace Donut
             m_CurrentState->OnRender();
     }
 
+    void StateManager::OnImUIRender()
+    {
+        if (m_CurrentState)
+            m_CurrentState->OnImUIRender();
+    }
+
     void StateManager::OnEvent(Event& event)
     {
         if (m_CurrentState)

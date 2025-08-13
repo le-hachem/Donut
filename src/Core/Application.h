@@ -19,6 +19,7 @@ namespace Donut
         void Close();
 
         Window& GetWindow()       { return *m_Window;   }
+        StateManager& GetStateManager() { return *m_StateManager; }
         static Application& Get() { return *s_Instance; }
     private:
         void OnInit();

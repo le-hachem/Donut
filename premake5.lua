@@ -24,9 +24,11 @@ workspace "Donut"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}/%{prj.name}"
 
 IncludeDir = {}
+IncludeDir["glm"]  = "Vendor/glm"
 IncludeDir["glfw"] = "Vendor/glfw/include"
 IncludeDir["glad"] = "Vendor/glad/include"
-IncludeDir["glm"]  = "Vendor/glm"
+IncludeDir["imgui"] = "Vendor/imgui"
+IncludeDir["imgui_backends"] = "Vendor/imgui/backends"
 
 group "Dependencies"
 
@@ -203,6 +205,44 @@ project "GLFW"
 		optimize "speed"
         symbols "off"
 
+project "ImGui"
+	kind "StaticLib"
+	language "C++"
+	staticruntime "on"
+	
+	targetdir ("bin/" .. outputdir)
+	objdir ("bin-int/" .. outputdir)
+	
+	files
+	{
+		"Vendor/imgui/imgui.cpp",
+		"Vendor/imgui/imgui_draw.cpp",
+		"Vendor/imgui/imgui_tables.cpp",
+		"Vendor/imgui/imgui_widgets.cpp",
+		"Vendor/imgui/imgui_demo.cpp"
+	}
+	
+	filter "system:windows"
+		systemversion "latest"
+		cppdialect "C++17"
+	
+	filter "system:linux"
+		pic "On"
+		systemversion "latest"
+		cppdialect "C++17"
+	
+	filter "configurations:Debug"
+		runtime "Debug"
+		symbols "on"
+	
+	filter "configurations:Release"
+		runtime "Release"
+		optimize "on"
+	
+	filter "configurations:Dist"
+		runtime "Release"
+		optimize "on"
+		symbols "off"
 group ""
 
 project "Donut"
@@ -225,22 +265,28 @@ project "Donut"
 		"Vendor/glm/glm/**.inl",
 
 		"src/**.h",
-		"src/**.cpp"
+		"src/**.cpp",
+		
+		"Vendor/imgui/backends/imgui_impl_glfw.cpp",
+		"Vendor/imgui/backends/imgui_impl_opengl3.cpp"
 	}
 
 	includedirs
 	{
 		"src",
 		
+		"%{IncludeDir.glm}",
 		"%{IncludeDir.glfw}",
 		"%{IncludeDir.glad}",
-		"%{IncludeDir.glm}"
+		"%{IncludeDir.imgui}",
+		"%{IncludeDir.imgui_backends}",
 	}
 
     links
     {
         "GLFW",
         "GLAD",
+        "ImGui"
     }
 
 	filter "system:windows"
