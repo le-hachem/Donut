@@ -156,7 +156,8 @@ namespace Donut
                                                                EventCategoryInput; }
 
     protected:
-        KeyEvent(int keycode) : m_KeyCode(keycode) { }
+        KeyEvent(int keycode)
+            : m_KeyCode(keycode) { }
         int m_KeyCode;
     };
 
@@ -185,7 +186,8 @@ namespace Donut
         : public KeyEvent
     {
     public:
-        KeyReleasedEvent(int keycode) : KeyEvent(keycode) { }
+        KeyReleasedEvent(int keycode)
+            : KeyEvent(keycode) { }
 
         std::string ToString() const override
         {
@@ -199,7 +201,8 @@ namespace Donut
         : public KeyEvent
     {
     public:
-        KeyTypedEvent(int keycode) : KeyEvent(keycode) { }
+        KeyTypedEvent(int keycode)
+            : KeyEvent(keycode) { }
 
         std::string ToString() const override
         {
@@ -262,7 +265,8 @@ namespace Donut
                                                                EventCategoryInput; }
 
     protected:
-        MouseButtonEvent(int button) : m_Button(button) { }
+        MouseButtonEvent(int button)
+            : m_Button(button) { }
         int m_Button;
     };
 
@@ -270,7 +274,8 @@ namespace Donut
         : public MouseButtonEvent
     {
     public:
-        MouseButtonPressedEvent(int button) : MouseButtonEvent(button) { }
+        MouseButtonPressedEvent(int button)
+            : MouseButtonEvent(button) { }
 
         std::string ToString() const override
         {
@@ -284,7 +289,8 @@ namespace Donut
         : public MouseButtonEvent
     {
     public:
-        MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) { }
+        MouseButtonReleasedEvent(int button)
+            : MouseButtonEvent(button) { }
 
         std::string ToString() const override
         {
@@ -297,7 +303,8 @@ namespace Donut
     class EventDispatcher
     {
     public:
-        EventDispatcher(Event& event) : m_Event(event) { }
+        EventDispatcher(Event& event) 
+            : m_Event(event) { }
 
         template<typename T, typename F>
         bool Dispatch(const F& func)
@@ -322,7 +329,10 @@ namespace Donut
         EventHandler() = default;
         ~EventHandler() = default;
 
-        void SetEventCallback(const EventCallbackFn& callback) { m_EventCallback = callback; }
+        void SetEventCallback(const EventCallbackFn& callback)
+        {
+            m_EventCallback = callback;
+        }
 
         void OnEvent(Event& event)
         {

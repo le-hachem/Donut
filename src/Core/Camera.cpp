@@ -28,27 +28,27 @@ namespace Donut
     void Camera::RecalculateViewMatrix()
     {
         float pitch = glm::radians(m_Rotation.x);
-        float yaw = glm::radians(m_Rotation.y);
-        float roll = glm::radians(m_Rotation.z);
+        float yaw   = glm::radians(m_Rotation.y);
+        float roll  = glm::radians(m_Rotation.z);
 
         glm::vec3 direction;
         direction.x = cos(yaw) * cos(pitch);
         direction.y = sin(pitch);
         direction.z = sin(yaw) * cos(pitch);
 
-        glm::vec3 front = glm::normalize(direction);
         glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
+        glm::vec3 front = glm::normalize(direction);
         glm::vec3 right = glm::normalize(glm::cross(front, worldUp));
-        glm::vec3 up = glm::normalize(glm::cross(right, front));
+        glm::vec3 up    = glm::normalize(glm::cross(right, front));
 
-        m_ViewMatrix = glm::lookAt(m_Position, m_Position + front, up);
+        m_ViewMatrix           = glm::lookAt(m_Position, m_Position + front, up);
         m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
     }
 
     glm::vec3 Camera::GetForwardDirection() const
     {
         float pitch = glm::radians(m_Rotation.x);
-        float yaw = glm::radians(m_Rotation.y);
+        float yaw   = glm::radians(m_Rotation.y);
 
         glm::vec3 direction;
         direction.x = cos(yaw) * cos(pitch);
@@ -67,10 +67,6 @@ namespace Donut
     glm::vec3 Camera::GetUpDirection() const
     {
         return glm::normalize(glm::cross(GetRightDirection(), GetForwardDirection()));
-    }
-
-    void Camera::OnUpdate(float deltaTime)
-    {
     }
 
     void Camera::OnMouseMove(float xOffset, float yOffset, bool constrainPitch)

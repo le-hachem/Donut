@@ -1,11 +1,10 @@
 #include "Window.h"
 #include <cstdint>
 #include <iostream>
-#include <glad/glad.h>
 
 namespace Donut
 {
-    static bool s_GLFWInitialized = false;
+    static bool     s_GLFWInitialized = false;
     static uint32_t s_GLFWWindowCount = 0;
 
     Window::Window(const std::string& title, int width, int height)
@@ -43,26 +42,18 @@ namespace Donut
         }
 
         glfwMakeContextCurrent(m_Window);
-        
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            std::cout << "Failed to initialize GLAD!" << std::endl;
-            glfwTerminate();
-            return;
-        }
-        
         glfwSetWindowUserPointer(m_Window, this);
 
         glfwSetErrorCallback(GLFWErrorCallback);
         glfwSetWindowCloseCallback(m_Window, GLFWWindowCloseCallback);
-        glfwSetWindowSizeCallback(m_Window, GLFWWindowSizeCallback);
+        glfwSetWindowSizeCallback(m_Window,  GLFWWindowSizeCallback);
         glfwSetWindowFocusCallback(m_Window, GLFWWindowFocusCallback);
-        glfwSetWindowPosCallback(m_Window, GLFWWindowPosCallback);
-        glfwSetKeyCallback(m_Window, GLFWKeyCallback);
-        glfwSetCharCallback(m_Window, GLFWCharCallback);
+        glfwSetWindowPosCallback(m_Window,   GLFWWindowPosCallback);
+        glfwSetKeyCallback(m_Window,         GLFWKeyCallback);
+        glfwSetCharCallback(m_Window,        GLFWCharCallback);
         glfwSetMouseButtonCallback(m_Window, GLFWMouseButtonCallback);
-        glfwSetScrollCallback(m_Window, GLFWMouseScrollCallback);
-        glfwSetCursorPosCallback(m_Window, GLFWCursorPosCallback);
+        glfwSetScrollCallback(m_Window,      GLFWMouseScrollCallback);
+        glfwSetCursorPosCallback(m_Window,   GLFWCursorPosCallback);
 
         s_GLFWWindowCount++;
     }
@@ -93,19 +84,15 @@ namespace Donut
     void Window::SetCursorLocked(bool locked)
     {
         m_CursorLocked = locked;
-        if (locked)
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        else
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(m_Window, GLFW_CURSOR, locked ? 
+                         GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
     }
 
     void Window::SetCursorVisible(bool visible)
     {
         m_CursorVisible = visible;
-        if (visible)
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        else
-            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        glfwSetInputMode(m_Window, GLFW_CURSOR, visible ? 
+                         GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN);
     }
 
     void Window::GLFWErrorCallback(int error, const char* description)
@@ -153,7 +140,8 @@ namespace Donut
         win->m_EventHandler.OnEvent(event);
     }
 
-    void Window::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+    void Window::GLFWKeyCallback(GLFWwindow* window, int key, int scancode, 
+                                 int action, int mods)
     {
         Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
         
@@ -184,7 +172,8 @@ namespace Donut
         win->m_EventHandler.OnEvent(event);
     }
 
-    void Window::GLFWMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+    void Window::GLFWMouseButtonCallback(GLFWwindow* window, int button, 
+                                         int action, int mods)
     {
         Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
         
@@ -199,8 +188,7 @@ namespace Donut
             {
                 MouseButtonReleasedEvent event(button);
                 win->m_EventHandler.OnEvent(event);
-                break;
-            }
+            } break;
         }
     }
 

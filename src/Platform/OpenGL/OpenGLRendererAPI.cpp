@@ -1,10 +1,24 @@
 #include "OpenGLRendererAPI.h"
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
 
 namespace Donut
 {
     void OpenGLRendererAPI::Init()
     {
+        if (!glfwGetCurrentContext())
+        {
+            std::cout << "No OpenGL context is current! Cannot initialize GLAD." << std::endl;
+            return;
+        }
+        
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        {
+            std::cout << "Failed to initialize GLAD!" << std::endl;
+            return;
+        }
+        
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);

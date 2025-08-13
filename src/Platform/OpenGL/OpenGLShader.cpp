@@ -55,11 +55,15 @@ namespace Donut
     std::string OpenGLShader::ReadFile(const std::string& filepath)
     {
         std::string result;
-        std::ifstream in(filepath, std::ios::in | std::ios::binary);
-        if (in) {
+        std::ifstream in(filepath, std::ios::in | 
+                                   std::ios::binary);
+        
+        if (in)
+        {
             in.seekg(0, std::ios::end);
             size_t size = in.tellg();
-            if (size != -1) {
+            if (size != -1)
+            {
                 result.resize(size);
                 in.seekg(0, std::ios::beg);
                 in.read(&result[0], size);
@@ -75,6 +79,7 @@ namespace Donut
         const char* typeToken = "#type";
         size_t typeTokenLength = strlen(typeToken);
         size_t pos = source.find(typeToken, 0);
+
         while (pos != std::string::npos)
         {
             size_t eol = source.find_first_of("\r\n", pos);

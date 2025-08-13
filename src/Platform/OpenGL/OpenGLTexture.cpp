@@ -7,9 +7,9 @@ namespace Donut
         : m_Width(width), m_Height(height)
     {
         m_InternalFormat = GL_RGBA8;
-        m_DataFormat = GL_RGBA;
+        m_DataFormat     = GL_RGBA;
 
-        glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+        glCreateTextures(GL_TEXTURE_2D,  1, &m_RendererID);
         glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
         glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -23,12 +23,12 @@ namespace Donut
     OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
         : m_Path(path)
     {
-        m_Width = 1;
-        m_Height = 1;
+        m_Width          = 1;
+        m_Height         = 1;
         m_InternalFormat = GL_RGBA8;
-        m_DataFormat = GL_RGBA;
+        m_DataFormat     = GL_RGBA;
 
-        glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+        glCreateTextures(GL_TEXTURE_2D,  1, &m_RendererID);
         glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
 
         glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

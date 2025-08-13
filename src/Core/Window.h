@@ -24,14 +24,14 @@ namespace Donut
 
         EventHandler& GetEventHandler() { return m_EventHandler; }
 
-        unsigned int GetWidth()  const { return m_Width; }
+        unsigned int GetWidth()  const { return m_Width;  }
         unsigned int GetHeight() const { return m_Height; }
 
-        void* GetNativeWindow() const { return m_Window; }
+        void* GetNativeWindow()  const { return m_Window; }
 
         void SetCursorLocked(bool locked);
         void SetCursorVisible(bool visible);
-        bool IsCursorLocked()  const { return m_CursorLocked; }
+        bool IsCursorLocked()  const { return m_CursorLocked;  }
         bool IsCursorVisible() const { return m_CursorVisible; }
     private:
         void Init();
@@ -48,10 +48,10 @@ namespace Donut
         static void GLFWMouseScrollCallback(GLFWwindow* window, double xOffset, double yOffset);
         static void GLFWCursorPosCallback(GLFWwindow* window, double xPos, double yPos);
     private:
-        GLFWwindow* m_Window;
+        GLFWwindow*  m_Window;
         EventHandler m_EventHandler;
 
-        std::string m_Title;
+        std::string  m_Title;
         unsigned int m_Width;
         unsigned int m_Height;
         bool m_IsClosed;

@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Rendering/VertexArray.h"
+#include "Rendering/VertexBuffer.h"
+#include "Rendering/IndexBuffer.h"
+
 #include <vector>
 #include <memory>
 
 namespace Donut
 {
-    class VertexBuffer;
-    class IndexBuffer;
-    
     class OpenGLVertexArray 
         : public VertexArray 
         {
@@ -35,6 +35,6 @@ namespace Donut
         uint32_t m_RendererID;
         uint32_t m_VertexBufferIndex = 0;
         std::vector<std::shared_ptr<VertexBuffer>> m_VertexBuffers;
-        std::shared_ptr<IndexBuffer> m_IndexBuffer;
+        std::shared_ptr<IndexBuffer>               m_IndexBuffer;
     };
 };

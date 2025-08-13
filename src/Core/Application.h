@@ -6,14 +6,11 @@
 #include <memory>
 #include <functional>
 
-namespace Donut
-{
-    class VertexArray;
-    class VertexBuffer;
-    class IndexBuffer;
-    class Shader;
-    class Texture2D;
-};
+#include "Rendering/VertexArray.h"
+#include "Rendering/VertexBuffer.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/Shader.h"
+#include "Rendering/Texture.h"
 
 namespace Donut
 {
@@ -41,30 +38,29 @@ namespace Donut
         bool m_Running;
         bool m_Minimized;
 
-        std::shared_ptr<VertexArray> m_VertexArray;
+        std::shared_ptr<VertexArray>  m_VertexArray;
         std::shared_ptr<VertexBuffer> m_VertexBuffer;
-        std::shared_ptr<IndexBuffer> m_IndexBuffer;
-        std::shared_ptr<Shader> m_Shader;
-        std::shared_ptr<Texture2D> m_Texture;
+        std::shared_ptr<IndexBuffer>  m_IndexBuffer;
+        std::shared_ptr<Shader>       m_Shader;
+        std::shared_ptr<Texture2D>    m_Texture;
         
-        // Compute shader related members
-        std::shared_ptr<Shader> m_ComputeShader;
+        std::shared_ptr<Shader>    m_ComputeShader;
         std::shared_ptr<Texture2D> m_ProcessedTexture;
         float m_ComputeBrightness;
         float m_ComputeContrast;
         float m_ComputeSaturation;
-        bool m_UseComputeShader;
+        bool  m_UseComputeShader;
         
         std::unique_ptr<Camera> m_Camera;
         
-        bool m_Keys[1024] = { false };
-        bool m_FirstMouse = true;
-        float m_LastX = 0.0f;
-        float m_LastY = 0.0f;
-        float m_DeltaTime = 0.0f;
-        float m_LastFrame = 0.0f;
-        bool m_MouseDragging = false;
-        float m_TextureTime = 0.0f;
+        bool  m_Keys[1024]    = { false };
+        bool  m_FirstMouse    = true;
+        float m_LastX         = 0.0f;
+        float m_LastY         = 0.0f;
+        float m_DeltaTime     = 0.0f;
+        float m_LastFrame     = 0.0f;
+        bool  m_MouseDragging = false;
+        float m_TextureTime   = 0.0f;
 
         static Application* s_Instance;
     };
