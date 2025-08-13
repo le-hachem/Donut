@@ -1,6 +1,7 @@
 #include "Texture.h"
 #include "Renderer.h"
 #include "../Platform/OpenGL/OpenGLTexture.h"
+#include "../Platform/Vulkan/VulkanTexture.h"
 
 namespace Donut
 {
@@ -10,6 +11,8 @@ namespace Donut
         {
         case RendererAPI::API::OpenGL:
             return std::make_shared<OpenGLTexture2D>(width, height);
+        case RendererAPI::API::Vulkan:
+            return std::make_shared<VulkanTexture2D>(width, height);
         case RendererAPI::API::None:
             return nullptr;
         default:
@@ -23,6 +26,8 @@ namespace Donut
         {
         case RendererAPI::API::OpenGL:
             return std::make_shared<OpenGLTexture2D>(path);
+        case RendererAPI::API::Vulkan:
+            return std::make_shared<VulkanTexture2D>(path);
         case RendererAPI::API::None:
             return nullptr;
         default:

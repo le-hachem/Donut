@@ -1,5 +1,6 @@
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
+#include "Platform/Vulkan/VulkanRendererAPI.h"
 #include <memory>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -11,6 +12,8 @@ namespace Donut
         {
             case API::OpenGL:
                 return std::make_unique<OpenGLRendererAPI>();
+            case API::Vulkan:
+                return std::make_unique<VulkanRendererAPI>();
             default:
                 return nullptr;
         }

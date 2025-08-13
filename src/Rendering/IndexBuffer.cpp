@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 #include "Platform/OpenGL/OpenGLIndexBuffer.h"
+#include "Platform/Vulkan/VulkanIndexBuffer.h"
 
 namespace Donut 
 {
@@ -11,6 +12,8 @@ namespace Donut
         {
             case RendererAPI::API::OpenGL:
                 return new OpenGLIndexBuffer(indices, count);
+            case RendererAPI::API::Vulkan:
+                return new VulkanIndexBuffer((uint32_t*)indices, count);
             default:
                 return nullptr;
         }

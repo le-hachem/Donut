@@ -1,6 +1,7 @@
 #include "Shader.h"
 #include "Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/Vulkan/VulkanShader.h"
 #include <memory>
 
 namespace Donut
@@ -11,6 +12,8 @@ namespace Donut
         {
             case RendererAPI::API::OpenGL:
                 return new OpenGLShader(filepath);
+            case RendererAPI::API::Vulkan:
+                return new VulkanShader(filepath);
             default:
                 return nullptr;
         }
@@ -22,6 +25,8 @@ namespace Donut
         {
             case RendererAPI::API::OpenGL:
                 return new OpenGLShader(name, vertexSrc, fragmentSrc);
+            case RendererAPI::API::Vulkan:
+                return new VulkanShader(name, vertexSrc, fragmentSrc);
             default:
                 return nullptr;
         }
@@ -33,6 +38,8 @@ namespace Donut
         {
             case RendererAPI::API::OpenGL:
                 return new OpenGLShader(name, computeSrc);
+            case RendererAPI::API::Vulkan:
+                return new VulkanShader(name, computeSrc);
             default:
                 return nullptr;
         }
