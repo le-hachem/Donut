@@ -268,7 +268,11 @@ project "Donut"
 		"src/**.cpp",
 		
 		"Vendor/imgui/backends/imgui_impl_glfw.cpp",
-		"Vendor/imgui/backends/imgui_impl_opengl3.cpp"
+		"Vendor/imgui/backends/imgui_impl_opengl3.cpp",
+		
+		"Assets/Fonts/Inter/static/Inter_18pt-Regular.ttf",
+		"Assets/Fonts/Inter/static/Inter_18pt-Bold.ttf",
+		"Assets/Fonts/Inter/static/Inter_18pt-Light.ttf"
 	}
 
 	includedirs

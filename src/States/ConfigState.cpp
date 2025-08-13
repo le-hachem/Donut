@@ -38,4 +38,4 @@ namespace Donut
             Application::Get().GetStateManager().SwitchToState("Simulation");
         ImGui::End();
     }
-}
+};

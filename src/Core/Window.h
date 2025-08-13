@@ -4,6 +4,8 @@
 #include "Log.h"
 
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+
 #include <string>
 
 namespace Donut
@@ -42,6 +44,9 @@ namespace Donut
     private:
         void Init();
         void Shutdown();
+
+        void SetupImGuiFonts();
+        void ApplyImGuiTheme();
         void ShutdownImGui();
         
         static void GLFWErrorCallback(int error, const char* description);
@@ -64,5 +69,9 @@ namespace Donut
         bool m_IsClosed;
         bool m_CursorLocked  = false;
         bool m_CursorVisible = true;
+        
+        ImFont* m_MainFont = nullptr;
+        ImFont* m_SmallFont = nullptr;
+        ImFont* m_LargeFont = nullptr;
     };
 }

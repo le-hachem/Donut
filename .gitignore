@@ -1,5 +1,6 @@
 logs/
 *.log
+imgui.ini
 
 bin/
 bin-int/
