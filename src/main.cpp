@@ -2,7 +2,7 @@
 
 int main()
 {
-    Donut::Application* app = new Donut::Application("Donut", 1280, 720);
+    Donut::Application* app = new Donut::Application();
     app->Run();
     delete app;
 }

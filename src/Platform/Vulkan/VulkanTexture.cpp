@@ -28,4 +28,9 @@ namespace Donut
 	{
 		// TODO(Hachem): Implement Vulkan texture binding
 	}
+
+	void VulkanTexture2D::BindAsImage(uint32_t slot, bool readOnly) const
+	{
+		// TODO(Hachem): Implement Vulkan texture image binding
+	}
 };

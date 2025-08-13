@@ -16,6 +16,12 @@ namespace Donut
 		// TODO(Hachem): Implement Vulkan shader creation from source
 	}
 
+	VulkanShader::VulkanShader(const std::string& name, const std::string& computeSrc)
+		: m_Name(name)
+	{
+		// TODO(Hachem): Implement Vulkan compute shader creation
+	}
+
 	VulkanShader::~VulkanShader()
 	{
 		// TODO(Hachem): Implement Vulkan shader cleanup
@@ -64,6 +70,21 @@ namespace Donut
 	void VulkanShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
 		// TODO(Hachem): Implement Vulkan shader mat4 uniform setting
+	}
+
+	void VulkanShader::Dispatch(uint32_t x, uint32_t y, uint32_t z)
+	{
+		// TODO(Hachem): Implement Vulkan compute shader dispatch
+	}
+
+	void VulkanShader::DispatchIndirect(uint32_t offset)
+	{
+		// TODO(Hachem): Implement Vulkan indirect compute shader dispatch
+	}
+
+	void VulkanShader::MemoryBarrier(uint32_t barriers)
+	{
+		// TODO(Hachem): Implement Vulkan memory barrier
 	}
 
 	void VulkanShader::UploadUniformInt(const std::string& name, int value)

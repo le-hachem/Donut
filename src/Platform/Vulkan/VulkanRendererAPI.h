@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/RendererAPI.h"
+#include "Rendering/Renderer.h"
 
 namespace Donut
 {

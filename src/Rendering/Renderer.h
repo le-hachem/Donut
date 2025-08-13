@@ -2,20 +2,12 @@
 
 #include "VertexArray.h"
 #include "Shader.h"
+
 #include <glm/glm.hpp>
 #include <memory>
 
 namespace Donut
 {
-    template<typename T>
-    using Scope = std::unique_ptr<T>;
-    
-    template<typename T, typename ... Args>
-    constexpr Scope<T> CreateScope(Args&& ... args)
-    {
-        return std::make_unique<T>(std::forward<Args>(args)...);
-    }
-
     class RendererAPI 
     {
     public:
@@ -39,8 +31,9 @@ namespace Donut
         virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, 
                                  uint32_t indexCount = 0)         = 0;
 
-        inline static API GetAPI() { return s_API; }
-        static Scope<RendererAPI> Create();
+        inline static API GetAPI()         { return s_API; }
+        inline static void SetAPI(API api) { s_API = api;  }
+        static std::unique_ptr<RendererAPI> Create();
     private:
         static API s_API;
     };
@@ -84,7 +77,7 @@ namespace Donut
         }
 
     private:
-        static Scope<RendererAPI> s_RendererAPI;
+        static std::unique_ptr<RendererAPI> s_RendererAPI;
     };
 
     class Renderer 

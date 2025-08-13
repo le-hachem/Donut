@@ -1,12 +1,14 @@
 #include "Renderer.h"
+
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
+
 #include <memory>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Donut 
 {
-    Scope<RendererAPI> RendererAPI::Create()
+    std::unique_ptr<RendererAPI> RendererAPI::Create()
      {
         switch (s_API)
         {
@@ -49,7 +51,7 @@ namespace Donut
         RenderCommand::DrawIndexed(vertexArray);
     }
 
-    Scope<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
+    std::unique_ptr<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
 
     void Renderer::SetClearColor(const glm::vec4& color)
     {

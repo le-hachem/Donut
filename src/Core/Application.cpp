@@ -1,4 +1,5 @@
 #include "Application.h"
+
 #include "Rendering/Renderer.h"
 
 #include "States/ConfigState.h"
@@ -101,6 +102,8 @@ namespace Donut
     void Application::OnInit()     
     { 
         Logger::Init();
+        
+        RendererAPI::SetAPI(RendererAPI::API::OpenGL);
         Renderer::Init();
         
         Renderer::OnWindowResize(1280, 720);
