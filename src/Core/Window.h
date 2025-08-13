@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include "Event.h"
+#include "Log.h"
 
 namespace Donut
 {

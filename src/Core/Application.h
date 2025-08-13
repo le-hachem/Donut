@@ -1,10 +1,12 @@
 #pragma once
 
+#include <memory>
+#include <functional>
+
 #include "Window.h"
 #include "Event.h"
 #include "Camera.h"
-#include <memory>
-#include <functional>
+#include "Log.h"
 
 #include "Rendering/VertexArray.h"
 #include "Rendering/VertexBuffer.h"

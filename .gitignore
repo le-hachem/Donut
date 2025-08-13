@@ -1,3 +1,6 @@
+logs/
+*.log
+
 bin/
 bin-int/
 

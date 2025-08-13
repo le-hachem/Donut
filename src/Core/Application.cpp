@@ -22,6 +22,7 @@ namespace Donut
         s_Instance = this;
 
         m_Window = std::make_unique<Window>(name, width, height);
+        
         m_Window->SetEventCallback([this](Event& event) 
         {
             OnEvent(event);
@@ -68,9 +69,13 @@ namespace Donut
         dispatcher.Dispatch<WindowResizeEvent>([this, &event](WindowResizeEvent& e) 
         {
             if (e.GetWidth() == 0 || e.GetHeight() == 0)
+            {
                 m_Minimized = true;
+            }
             else
+            {
                 m_Minimized = false;
+            }
             
             Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
             
@@ -152,7 +157,9 @@ namespace Donut
 
     void Application::OnInit()     
     { 
+        Logger::Init();
         Renderer::Init();
+        
         Renderer::OnWindowResize(1280, 720);
         RenderCommand::SetFaceCulling(false);
 
@@ -229,30 +236,23 @@ namespace Donut
         
         if (!m_ComputeShader)
         {
-            std::cout << "Failed to create compute shader! Falling back to CPU texture generation." << std::endl;
+            DONUT_WARN("Failed to create compute shader! Falling back to CPU texture generation.");
             m_UseComputeShader = false;
         }
         else
-            std::cout << "Compute shader created successfully!" << std::endl;
+            DONUT_INFO("Compute shader created successfully!");
         
         m_ProcessedTexture = Texture2D::Create(256, 256);
         m_ComputeBrightness = 0.0f;
         m_ComputeContrast = 1.0f;
         m_ComputeSaturation = 1.0f;
         m_UseComputeShader = true;
-        
-        std::cout << "=== Compute Shader Test ===" << std::endl;
-        std::cout << "C - Toggle compute shader on/off" << std::endl;
-        std::cout << "Arrow Keys - Adjust brightness (Up/Down) and contrast (Left/Right)" << std::endl;
-        std::cout << "Q/E - Adjust saturation" << std::endl;
-        std::cout << "WASD - Move camera" << std::endl;
-        std::cout << "Mouse - Look around" << std::endl;
-        std::cout << "==========================" << std::endl;
     }
 
     void Application::OnShutdown() 
     { 
         Renderer::Shutdown();
+        Logger::Shutdown();
     }
 
     void Application::OnUpdate()
@@ -281,7 +281,7 @@ namespace Donut
         if (m_Keys[GLFW_KEY_C] && !cKeyPressed)
         {
             m_UseComputeShader = !m_UseComputeShader;
-            std::cout << "Compute shader: " << (m_UseComputeShader ? "ON" : "OFF") << std::endl;
+            DONUT_INFO("Compute shader: {}", (m_UseComputeShader ? "ON" : "OFF"));
             cKeyPressed = true;
         }
         if (!m_Keys[GLFW_KEY_C])
@@ -307,9 +307,8 @@ namespace Donut
         statusTimer += m_DeltaTime;
         if (statusTimer > 2.0f)
         {
-            std::cout << "Compute Shader Status - Brightness: " << m_ComputeBrightness 
-                      << ", Contrast: " << m_ComputeContrast 
-                      << ", Saturation: " << m_ComputeSaturation << std::endl;
+            DONUT_INFO("Compute Shader Status:\nBrightness: {}\nContrast: {}\nSaturation: {}",
+                       m_ComputeBrightness, m_ComputeContrast, m_ComputeSaturation);
             statusTimer = 0.0f;
         }
         
@@ -321,7 +320,8 @@ namespace Donut
         Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         Renderer::Clear();
 
-        if (m_UseComputeShader && m_ProcessedTexture)
+        if (m_UseComputeShader && 
+            m_ProcessedTexture)
         {
             m_ProcessedTexture->Bind(0);
             m_Shader->SetInt("u_Texture", 0);

@@ -14,7 +14,14 @@ workspace "Donut"
 		"MultiProcessorCompile"
 	}
 
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+	filter "system:windows"
+		defines "DONUT_WINDOWS"
+	filter "system:linux"
+		defines "DONUT_LINUX"
+	filter "system:macosx"
+		defines "DONUT_MACOS"
+
+outputdir = "%{cfg.buildcfg}-%{cfg.system}/%{prj.name}"
 
 IncludeDir = {}
 IncludeDir["glfw"] = "Vendor/glfw/include"
@@ -27,8 +34,8 @@ project "GLAD"
     kind "StaticLib"
     language "C"
     staticruntime "on"
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("bin/" .. outputdir)
+    objdir ("bin-int/" .. outputdir)
 
     files
     {
@@ -60,8 +67,8 @@ project "GLFW"
 	staticruntime "on"
 	warnings "off"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("bin/" .. outputdir)
+	objdir ("bin-int/" .. outputdir)
 
 	files
 	{
@@ -201,10 +208,11 @@ group ""
 project "Donut"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
 	staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("bin/" .. outputdir)
+	objdir ("bin-int/" .. outputdir)
 
 	defines
 	{

@@ -21,25 +21,30 @@ namespace Donut
 
     void Window::Init()
     {
+        DONUT_INFO("Initializing window: ", m_Title, " (", m_Width, "x", m_Height, ")");
+        
         if (!s_GLFWInitialized)
         {
             int success = glfwInit();
             if (!success)
             {
-                std::cout << "Could not initialize GLFW!" << std::endl;
+                DONUT_ERROR("Could not initialize GLFW!");
                 return;
             }
 
             s_GLFWInitialized = true;
+            DONUT_INFO("GLFW initialized successfully");
         }
 
         m_Window = glfwCreateWindow(m_Width, m_Height, m_Title.c_str(), nullptr, nullptr);
         if (!m_Window)
         {
-            std::cout << "Could not create GLFW window!" << std::endl;
+            DONUT_ERROR("Could not create GLFW window!");
             glfwTerminate();
             return;
         }
+        
+        DONUT_INFO("GLFW window created successfully");
 
         glfwMakeContextCurrent(m_Window);
         glfwSetWindowUserPointer(m_Window, this);
@@ -60,6 +65,7 @@ namespace Donut
 
     void Window::Shutdown()
     {
+        DONUT_INFO("Shutting down window: ", m_Title);
         glfwDestroyWindow(m_Window);
         s_GLFWWindowCount--;
 
@@ -67,6 +73,7 @@ namespace Donut
         {
             glfwTerminate();
             s_GLFWInitialized = false;
+            DONUT_INFO("GLFW terminated (no more windows)");
         }
     }
 
@@ -97,7 +104,7 @@ namespace Donut
 
     void Window::GLFWErrorCallback(int error, const char* description)
     {
-        std::cout << "GLFW Error (" << error << "): " << description << std::endl;
+        DONUT_ERROR("GLFW Error (", error, "): ", description);
     }
 
     void Window::GLFWWindowCloseCallback(GLFWwindow* window)
