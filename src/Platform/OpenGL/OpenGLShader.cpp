@@ -12,6 +12,8 @@ namespace Donut
             return GL_VERTEX_SHADER;
         if (type == "fragment" || type == "pixel")
             return GL_FRAGMENT_SHADER;
+        if (type == "compute")
+            return GL_COMPUTE_SHADER;
         return 0;
     }
 
@@ -34,6 +36,14 @@ namespace Donut
         std::unordered_map<uint32_t, std::string> sources;
         sources[GL_VERTEX_SHADER] = vertexSrc;
         sources[GL_FRAGMENT_SHADER] = fragmentSrc;
+        Compile(sources);
+    }
+
+    OpenGLShader::OpenGLShader(const std::string& name, const std::string& computeSrc)
+        : m_Name(name) 
+    {
+        std::unordered_map<uint32_t, std::string> sources;
+        sources[GL_COMPUTE_SHADER] = computeSrc;
         Compile(sources);
     }
 
@@ -160,6 +170,11 @@ namespace Donut
         UploadUniformFloat(name, value);
     }
 
+    void OpenGLShader::SetFloat2(const std::string& name, const glm::vec2& value)
+    {
+        UploadUniformFloat2(name, value);
+    }
+
     void OpenGLShader::SetFloat3(const std::string& name, const glm::vec3& value)
     {
         UploadUniformFloat3(name, value);
@@ -221,5 +236,20 @@ namespace Donut
     {
         int location = glGetUniformLocation(m_RendererID, name.c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void OpenGLShader::Dispatch(uint32_t x, uint32_t y, uint32_t z)
+    {
+        glDispatchCompute(x, y, z);
+    }
+
+    void OpenGLShader::DispatchIndirect(uint32_t offset)
+    {
+        glDispatchComputeIndirect(offset);
+    }
+
+    void OpenGLShader::MemoryBarrier(uint32_t barriers)
+    {
+        glMemoryBarrier(barriers);
     }
 };

@@ -81,7 +81,8 @@ namespace Donut
         virtual int GetCategoryFlags() const override { return EventCategoryKeyboard | \
                                                                EventCategoryInput; }
 
-    class WindowResizeEvent : public Event
+    class WindowResizeEvent
+        : public Event
     {
     public:
         WindowResizeEvent(unsigned int width, unsigned int height)
@@ -101,28 +102,32 @@ namespace Donut
         unsigned int m_Width, m_Height;
     };
 
-    class WindowCloseEvent : public Event
+    class WindowCloseEvent 
+        : public Event
     {
     public:
         WindowCloseEvent() = default;
         APPLICATION_EVENT_CLASS_TYPE(WindowClose)
     };
 
-    class WindowFocusEvent : public Event
+    class WindowFocusEvent 
+        : public Event
     {
     public:
         WindowFocusEvent() = default;
         APPLICATION_EVENT_CLASS_TYPE(WindowFocus)
     };
 
-    class WindowLostFocusEvent : public Event
+    class WindowLostFocusEvent 
+        : public Event
     {
     public:
         WindowLostFocusEvent() = default;
         APPLICATION_EVENT_CLASS_TYPE(WindowLostFocus)
     };
 
-    class WindowMovedEvent : public Event
+    class WindowMovedEvent 
+        : public Event
     {
     public:
         WindowMovedEvent(int x, int y)
@@ -142,7 +147,8 @@ namespace Donut
         int m_X, m_Y;
     };
 
-    class KeyEvent : public Event
+    class KeyEvent 
+        : public Event
     {
     public:
         int GetKeyCode()               const          { return m_KeyCode;          }
@@ -154,7 +160,8 @@ namespace Donut
         int m_KeyCode;
     };
 
-    class KeyPressedEvent : public KeyEvent
+    class KeyPressedEvent 
+        : public KeyEvent
     {
     public:
         KeyPressedEvent(int keycode, bool isRepeat = false)
@@ -174,7 +181,8 @@ namespace Donut
         bool m_IsRepeat;
     };
 
-    class KeyReleasedEvent : public KeyEvent
+    class KeyReleasedEvent 
+        : public KeyEvent
     {
     public:
         KeyReleasedEvent(int keycode) : KeyEvent(keycode) { }
@@ -187,7 +195,8 @@ namespace Donut
         KEYBOARD_EVENT_CLASS_TYPE(KeyReleased)
     };
 
-    class KeyTypedEvent : public KeyEvent
+    class KeyTypedEvent 
+        : public KeyEvent
     {
     public:
         KeyTypedEvent(int keycode) : KeyEvent(keycode) { }
@@ -200,7 +209,8 @@ namespace Donut
         KEYBOARD_EVENT_CLASS_TYPE(KeyTyped)
     };
 
-    class MouseMovedEvent : public Event
+    class MouseMovedEvent 
+        : public Event
     {
     public:
         MouseMovedEvent(float x, float y)
@@ -220,7 +230,8 @@ namespace Donut
         float m_MouseX, m_MouseY;
     };
 
-    class MouseScrolledEvent : public Event
+    class MouseScrolledEvent 
+        : public Event
     {
     public:
         MouseScrolledEvent(float xOffset, float yOffset)
@@ -241,7 +252,8 @@ namespace Donut
         float m_XOffset, m_YOffset;
     };
 
-    class MouseButtonEvent : public Event
+    class MouseButtonEvent 
+        : public Event
     {
     public:
         int GetMouseButton()           const          { return m_Button;           }
@@ -254,7 +266,8 @@ namespace Donut
         int m_Button;
     };
 
-    class MouseButtonPressedEvent : public MouseButtonEvent
+    class MouseButtonPressedEvent 
+        : public MouseButtonEvent
     {
     public:
         MouseButtonPressedEvent(int button) : MouseButtonEvent(button) { }
@@ -267,7 +280,8 @@ namespace Donut
         MOUSE_BUTTON_EVENT_CLASS_TYPE(MouseButtonPressed)
     };
 
-    class MouseButtonReleasedEvent : public MouseButtonEvent
+    class MouseButtonReleasedEvent 
+        : public MouseButtonEvent
     {
     public:
         MouseButtonReleasedEvent(int button) : MouseButtonEvent(button) { }

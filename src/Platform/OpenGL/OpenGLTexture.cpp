@@ -19,7 +19,7 @@ namespace Donut
         glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
     }
 
-    // TODO: Texture Loading
+    // TODO(Hachem): Texture Loading
     OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
         : m_Path(path)
     {
@@ -56,11 +56,18 @@ namespace Donut
             std::cout << "Data must be entire texture!" << std::endl;
             return;
         }
+        
         glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
     }
 
     void OpenGLTexture2D::Bind(uint32_t slot) const
     {
         glBindTextureUnit(slot, m_RendererID);
+    }
+
+    void OpenGLTexture2D::BindAsImage(uint32_t slot, bool readOnly) const
+    {
+        GLenum access = readOnly ? GL_READ_ONLY : GL_WRITE_ONLY;
+        glBindImageTexture(slot, m_RendererID, 0, GL_FALSE, 0, access, m_InternalFormat);
     }
 };

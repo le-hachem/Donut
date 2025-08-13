@@ -224,6 +224,30 @@ namespace Donut
         
         m_Texture->SetData(pixelData, 256 * 256 * 4);
         delete[] pixelData;
+
+        m_ComputeShader = std::shared_ptr<Shader>(Shader::Create("assets/TextureProcessor.glsl"));
+        
+        if (!m_ComputeShader)
+        {
+            std::cout << "Failed to create compute shader! Falling back to CPU texture generation." << std::endl;
+            m_UseComputeShader = false;
+        }
+        else
+            std::cout << "Compute shader created successfully!" << std::endl;
+        
+        m_ProcessedTexture = Texture2D::Create(256, 256);
+        m_ComputeBrightness = 0.0f;
+        m_ComputeContrast = 1.0f;
+        m_ComputeSaturation = 1.0f;
+        m_UseComputeShader = true;
+        
+        std::cout << "=== Compute Shader Test ===" << std::endl;
+        std::cout << "C - Toggle compute shader on/off" << std::endl;
+        std::cout << "Arrow Keys - Adjust brightness (Up/Down) and contrast (Left/Right)" << std::endl;
+        std::cout << "Q/E - Adjust saturation" << std::endl;
+        std::cout << "WASD - Move camera" << std::endl;
+        std::cout << "Mouse - Look around" << std::endl;
+        std::cout << "==========================" << std::endl;
     }
 
     void Application::OnShutdown() 
@@ -253,6 +277,42 @@ namespace Donut
                 m_Camera->MoveDown(m_DeltaTime);    
         }
         
+        static bool cKeyPressed = false;
+        if (m_Keys[GLFW_KEY_C] && !cKeyPressed)
+        {
+            m_UseComputeShader = !m_UseComputeShader;
+            std::cout << "Compute shader: " << (m_UseComputeShader ? "ON" : "OFF") << std::endl;
+            cKeyPressed = true;
+        }
+        if (!m_Keys[GLFW_KEY_C])
+            cKeyPressed = false;
+        if (m_Keys[GLFW_KEY_UP])
+            m_ComputeBrightness += m_DeltaTime * 0.5f;
+        if (m_Keys[GLFW_KEY_DOWN])
+            m_ComputeBrightness -= m_DeltaTime * 0.5f;
+        if (m_Keys[GLFW_KEY_LEFT])
+            m_ComputeContrast -= m_DeltaTime * 0.5f;
+        if (m_Keys[GLFW_KEY_RIGHT])
+            m_ComputeContrast += m_DeltaTime * 0.5f;
+        if (m_Keys[GLFW_KEY_Q])
+            m_ComputeSaturation -= m_DeltaTime * 0.5f;
+        if (m_Keys[GLFW_KEY_E])
+            m_ComputeSaturation += m_DeltaTime * 0.5f;
+        
+        m_ComputeBrightness = glm::clamp(m_ComputeBrightness, -1.0f, 1.0f);
+        m_ComputeContrast = glm::clamp(m_ComputeContrast, 0.1f, 3.0f);
+        m_ComputeSaturation = glm::clamp(m_ComputeSaturation, 0.0f, 2.0f);
+        
+        static float statusTimer = 0.0f;
+        statusTimer += m_DeltaTime;
+        if (statusTimer > 2.0f)
+        {
+            std::cout << "Compute Shader Status - Brightness: " << m_ComputeBrightness 
+                      << ", Contrast: " << m_ComputeContrast 
+                      << ", Saturation: " << m_ComputeSaturation << std::endl;
+            statusTimer = 0.0f;
+        }
+        
         UpdateTexture();
     }
 
@@ -261,7 +321,12 @@ namespace Donut
         Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         Renderer::Clear();
 
-        if (m_Texture)
+        if (m_UseComputeShader && m_ProcessedTexture)
+        {
+            m_ProcessedTexture->Bind(0);
+            m_Shader->SetInt("u_Texture", 0);
+        }
+        else if (m_Texture)
         {
             m_Texture->Bind(0);
             m_Shader->SetInt("u_Texture", 0);
@@ -300,28 +365,45 @@ namespace Donut
             
         m_TextureTime += m_DeltaTime;
         
-        uint32_t* pixelData = new uint32_t[256 * 256];
-        for (int y = 0; y < 256; y++)
+        if (m_UseComputeShader && m_ComputeShader && m_ProcessedTexture)
         {
-            for (int x = 0; x < 256; x++)
-            {
-                float time = m_TextureTime * 2.0f;
-                float u = (float)x / 256.0f;
-                float v = (float)y / 256.0f;
-                
-                float wave = sin(u * 10.0f + time) * cos(v * 10.0f + time * 0.5f);
-                wave = (wave + 1.0f) * 0.5f;
-                
-                uint8_t r = (uint8_t)(wave * 255);
-                uint8_t g = (uint8_t)((1.0f - wave) * 255);
-                uint8_t b = (uint8_t)((u + v) * 0.5f * 255);
-                uint8_t a = 255;
-                
-                pixelData[y * 256 + x] = (a << 24) | (b << 16) | (g << 8) | r;
-            }
+            m_ComputeShader->Bind();
+            m_Texture->Bind(0);
+            m_ComputeShader->SetInt("u_InputTexture", 0);
+            m_ProcessedTexture->BindAsImage(1, false);
+            m_ComputeShader->SetFloat2("u_TextureSize", glm::vec2(256.0f, 256.0f));
+            m_ComputeShader->SetFloat("u_Time", m_TextureTime);
+            m_ComputeShader->SetFloat("u_Brightness", m_ComputeBrightness);
+            m_ComputeShader->SetFloat("u_Contrast", m_ComputeContrast);
+            m_ComputeShader->SetFloat("u_Saturation", m_ComputeSaturation);
+            m_ComputeShader->Dispatch(16, 16, 1);
+            m_ComputeShader->MemoryBarrier(IMAGE_ACCESS_BARRIER_BIT);
         }
-        
-        m_Texture->SetData(pixelData, 256 * 256 * 4);
-        delete[] pixelData;
+        else
+        {
+            uint32_t* pixelData = new uint32_t[256 * 256];
+            for (int y = 0; y < 256; y++)
+            {
+                for (int x = 0; x < 256; x++)
+                {
+                    float time = m_TextureTime * 2.0f;
+                    float u = (float)x / 256.0f;
+                    float v = (float)y / 256.0f;
+                    
+                    float wave = sin(u * 10.0f + time) * cos(v * 10.0f + time * 0.5f);
+                    wave = (wave + 1.0f) * 0.5f;
+                    
+                    uint8_t r = (uint8_t)(wave * 255);
+                    uint8_t g = (uint8_t)((1.0f - wave) * 255);
+                    uint8_t b = (uint8_t)((u + v) * 0.5f * 255);
+                    uint8_t a = 255;
+                    
+                    pixelData[y * 256 + x] = (a << 24) | (b << 16) | (g << 8) | r;
+                }
+            }
+            
+            m_Texture->SetData(pixelData, 256 * 256 * 4);
+            delete[] pixelData;
+        }
     }
 }

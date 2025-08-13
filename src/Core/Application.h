@@ -47,6 +47,14 @@ namespace Donut
         std::shared_ptr<Shader> m_Shader;
         std::shared_ptr<Texture2D> m_Texture;
         
+        // Compute shader related members
+        std::shared_ptr<Shader> m_ComputeShader;
+        std::shared_ptr<Texture2D> m_ProcessedTexture;
+        float m_ComputeBrightness;
+        float m_ComputeContrast;
+        float m_ComputeSaturation;
+        bool m_UseComputeShader;
+        
         std::unique_ptr<Camera> m_Camera;
         
         bool m_Keys[1024] = { false };

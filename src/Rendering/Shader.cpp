@@ -27,6 +27,17 @@ namespace Donut
         }
     }
 
+    Shader* Shader::CreateCompute(const std::string& name, const std::string& computeSrc)
+    {
+        switch (Renderer::GetAPI()) 
+        {
+            case RendererAPI::API::OpenGL:
+                return new OpenGLShader(name, computeSrc);
+            default:
+                return nullptr;
+        }
+    }
+
     void ShaderLibrary::Add(const std::shared_ptr<Shader>& shader)
     {
         auto& name = shader->GetName();
