@@ -205,8 +205,7 @@ namespace Donut
         m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 36));
         m_VertexArray->SetIndexBuffer(m_IndexBuffer);
 
-        m_Shader = std::shared_ptr<Shader>(Shader::Create("assets/Textured.glsl"));
-
+        m_Shader = std::shared_ptr<Shader>(Shader::Create("Assets/Textured.glsl"));
         m_Texture = Texture2D::Create(256, 256);
         
         uint32_t* pixelData = new uint32_t[256 * 256];
@@ -232,7 +231,7 @@ namespace Donut
         m_Texture->SetData(pixelData, 256 * 256 * 4);
         delete[] pixelData;
 
-        m_ComputeShader = std::shared_ptr<Shader>(Shader::Create("assets/TextureProcessor.glsl"));
+        m_ComputeShader = std::shared_ptr<Shader>(Shader::Create("Assets/TextureProcessor.glsl"));
         
         if (!m_ComputeShader)
         {
