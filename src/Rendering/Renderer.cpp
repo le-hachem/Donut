@@ -3,19 +3,18 @@
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 #include "Platform/Vulkan/VulkanRendererAPI.h"
 
-#include <memory>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Donut 
 {
-    std::unique_ptr<RendererAPI> RendererAPI::Create()
+    Scope<RendererAPI> RendererAPI::Create()
      {
         switch (s_API)
         {
             case API::OpenGL:
-                return std::make_unique<OpenGLRendererAPI>();
+                return CreateScope<OpenGLRendererAPI>();
             case API::Vulkan:
-                return std::make_unique<VulkanRendererAPI>();
+                return CreateScope<VulkanRendererAPI>();
             default:
                 return nullptr;
         }
@@ -38,8 +37,8 @@ namespace Donut
         RenderCommand::SetViewport(0, 0, width, height);
     }
 
-    void Renderer::Submit(const std::shared_ptr<Shader>& shader, 
-                          const std::shared_ptr<VertexArray>& vertexArray,
+    void Renderer::Submit(const Ref<Shader>& shader, 
+                          const Ref<VertexArray>& vertexArray,
                           const glm::mat4& transform,
                           const glm::mat4& viewProjection) 
     {
@@ -51,7 +50,7 @@ namespace Donut
         RenderCommand::DrawIndexed(vertexArray);
     }
 
-    std::unique_ptr<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
+    Scope<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
 
     void Renderer::SetClearColor(const glm::vec4& color)
     {

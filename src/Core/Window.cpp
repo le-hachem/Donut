@@ -1,6 +1,6 @@
 #include "Window.h"
+
 #include <cstdint>
-#include <iostream>
 
 namespace Donut
 {

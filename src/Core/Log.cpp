@@ -1,4 +1,5 @@
 #include "Log.h"
+
 #include <filesystem>
 
 #if defined(DONUT_WINDOWS)
@@ -7,11 +8,11 @@
 
 namespace Donut 
 {
-    std::shared_ptr<Logger> Logger::s_Logger;
+    Ref<Logger> Logger::s_Logger;
 
     void Logger::Init()
     {
-        s_Logger = std::make_shared<Logger>();
+        s_Logger = CreateRef<Logger>();
         s_Logger->SetLogLevel(LogLevel::INFO);
         s_Logger->EnableConsoleOutput(true);
         s_Logger->EnableFileOutput(true);
@@ -27,7 +28,7 @@ namespace Donut
         s_Logger.reset();
     }
 
-    std::shared_ptr<Logger> Logger::GetLogger()
+    Ref<Logger> Logger::GetLogger()
     {
         return s_Logger;
     }

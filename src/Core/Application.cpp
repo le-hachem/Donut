@@ -16,7 +16,7 @@ namespace Donut
     {
         s_Instance = this;
 
-        m_Window = std::make_unique<Window>(name, width, height);
+        m_Window = CreateScope<Window>(name, width, height);
         m_Window->SetEventCallback([this](Event& event) 
         {
             OnEvent(event);
@@ -109,9 +109,9 @@ namespace Donut
         Renderer::OnWindowResize(1280, 720);
         RenderCommand::SetFaceCulling(false);
 
-        m_StateManager = std::make_unique<StateManager>();
-        m_StateManager->RegisterState("Config", std::make_unique<ConfigState>());
-        m_StateManager->RegisterState("Simulation", std::make_unique<SimulationState>());
+        m_StateManager = CreateScope<StateManager>();
+        m_StateManager->RegisterState("Config", CreateScope<ConfigState>());
+        m_StateManager->RegisterState("Simulation", CreateScope<SimulationState>());
         m_StateManager->SwitchToState("Config");
     }
 

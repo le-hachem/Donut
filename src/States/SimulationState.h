@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Memory.h"
 #include "Core/State.h"
 #include "Core/Event.h"
 #include "Core/Camera.h"
@@ -28,16 +29,16 @@ namespace Donut
         void HandleKeyInput(float deltaTime);
         void UpdateTexture();
     private:
-        std::unique_ptr<Camera> m_Camera;
+        Scope<Camera> m_Camera;
         
-        std::shared_ptr<VertexArray>  m_VertexArray;
-        std::shared_ptr<VertexBuffer> m_VertexBuffer;
-        std::shared_ptr<IndexBuffer>  m_IndexBuffer;
-        std::shared_ptr<Shader>       m_Shader;
-        std::shared_ptr<Texture2D>    m_Texture;
+        Ref<VertexArray>  m_VertexArray;
+        Ref<VertexBuffer> m_VertexBuffer;
+        Ref<IndexBuffer>  m_IndexBuffer;
+        Ref<Shader>       m_Shader;
+        Ref<Texture2D>    m_Texture;
         
-        std::shared_ptr<Shader>    m_ComputeShader;
-        std::shared_ptr<Texture2D> m_ProcessedTexture;
+        Ref<Shader>    m_ComputeShader;
+        Ref<Texture2D> m_ProcessedTexture;
         
         float m_ComputeBrightness = 0.0f;
         float m_ComputeContrast   = 1.0f;

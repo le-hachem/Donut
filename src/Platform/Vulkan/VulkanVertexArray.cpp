@@ -22,13 +22,13 @@ namespace Donut
 		// TODO(Hachem): Implement Vulkan vertex array unbinding
 	}
 
-	void VulkanVertexArray::AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)
+	void VulkanVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
 		// TODO(Hachem): Implement Vulkan vertex buffer addition
 		m_VertexBuffers.push_back(vertexBuffer);
 	}
 
-	void VulkanVertexArray::SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)
+	void VulkanVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
 		// TODO(Hachem): Implement Vulkan index buffer setting
 		m_IndexBuffer = indexBuffer;

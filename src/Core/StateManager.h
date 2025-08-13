@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
+#include "Memory.h"
+#include "State.h"
+
 #include <string>
 #include <unordered_map>
-
-#include "State.h"
 
 namespace Donut
 {
@@ -18,7 +18,7 @@ namespace Donut
         void Render();
         void OnEvent(Event& event);
         
-        void RegisterState(const std::string& stateName, std::unique_ptr<State> state);
+        void RegisterState(const std::string& stateName, Scope<State> state);
         void SwitchToState(const std::string& stateName);
 
         std::string GetCurrentStateName() const { return m_CurrentStateName; }
@@ -34,6 +34,6 @@ namespace Donut
         State*      m_CurrentState     = nullptr;
         std::string m_CurrentStateName = "";
         
-        std::unordered_map<std::string, std::unique_ptr<State>> m_States;
+        std::unordered_map<std::string, Scope<State>> m_States;
     };
 }

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Core/Memory.h"
 #include "VertexArray.h"
 #include "Shader.h"
 
 #include <glm/glm.hpp>
-#include <memory>
 
 namespace Donut
 {
@@ -28,12 +28,12 @@ namespace Donut
         virtual void EnableDepthTest()                            = 0;
         virtual void SetFaceCulling(bool enabled)                 = 0;
 
-        virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, 
+        virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, 
                                  uint32_t indexCount = 0)         = 0;
 
         inline static API GetAPI()         { return s_API; }
         inline static void SetAPI(API api) { s_API = api;  }
-        static std::unique_ptr<RendererAPI> Create();
+        static Scope<RendererAPI> Create();
     private:
         static API s_API;
     };
@@ -71,13 +71,13 @@ namespace Donut
             s_RendererAPI->SetFaceCulling(enabled);
         }
 
-        inline static void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount = 0)
+        inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
         {
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
 
     private:
-        static std::unique_ptr<RendererAPI> s_RendererAPI;
+        static Scope<RendererAPI> s_RendererAPI;
     };
 
     class Renderer 
@@ -88,8 +88,8 @@ namespace Donut
 
         static void OnWindowResize(uint32_t width, uint32_t height);
 
-        static void Submit(const std::shared_ptr<Shader>& shader, 
-                           const std::shared_ptr<VertexArray>& vertexArray,
+        static void Submit(const Ref<Shader>& shader, 
+                           const Ref<VertexArray>& vertexArray,
                            const glm::mat4& transform,
                            const glm::mat4& viewProjection);
 

@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Core/Memory.h"
+
 #include <string>
-#include <memory>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -28,7 +29,7 @@ namespace Donut
         static void Init();
         static void Shutdown();
 
-        static std::shared_ptr<Logger> GetLogger();
+        static Ref<Logger> GetLogger();
 
         template<typename... Args>
         static void Trace(const std::string_view& format, const Args&... args) 
@@ -135,7 +136,7 @@ namespace Donut
         std::ofstream m_LogFile;
         std::mutex    m_Mutex;
 
-        static std::shared_ptr<Logger> s_Logger;
+        static Ref<Logger> s_Logger;
     };
 }
 

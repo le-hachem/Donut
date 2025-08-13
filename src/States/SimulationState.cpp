@@ -6,7 +6,6 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 
-#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
@@ -15,7 +14,7 @@ namespace Donut
 {
     void SimulationState::OnEnter()
     {
-        m_Camera = std::make_unique<Camera>(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f);
+        m_Camera = CreateScope<Camera>(45.0f, 1280.0f / 720.0f, 0.1f, 100.0f);
         m_Camera->SetPosition({ 0.0f, 0.0f, 3.0f });
         m_Camera->SetMouseSensitivity(0.1f);
         m_Camera->SetMovementSpeed(5.0f);
@@ -42,8 +41,8 @@ namespace Donut
             4, 5, 1,  1, 0, 4
         };
 
-        m_VertexArray = std::shared_ptr<VertexArray>(VertexArray::Create());
-        m_VertexBuffer = std::shared_ptr<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
+        m_VertexArray = Ref<VertexArray>(VertexArray::Create());
+        m_VertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
         
         VertexBufferLayout layout;
         layout.Push<float>(3);
@@ -53,10 +52,10 @@ namespace Donut
 
         m_VertexArray->AddVertexBuffer(m_VertexBuffer);
 
-        m_IndexBuffer = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(indices, 36));
+        m_IndexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices, 36));
         m_VertexArray->SetIndexBuffer(m_IndexBuffer);
 
-        m_Shader = std::shared_ptr<Shader>(Shader::Create("Assets/Textured.glsl"));
+        m_Shader = Ref<Shader>(Shader::Create("Assets/Textured.glsl"));
         m_Texture = Texture2D::Create(256, 256);
         
         uint32_t* pixelData = new uint32_t[256 * 256];
@@ -82,7 +81,7 @@ namespace Donut
         m_Texture->SetData(pixelData, 256 * 256 * 4);
         delete[] pixelData;
 
-        m_ComputeShader = std::shared_ptr<Shader>(Shader::Create("Assets/TextureProcessor.glsl"));
+        m_ComputeShader = Ref<Shader>(Shader::Create("Assets/TextureProcessor.glsl"));
         
         if (!m_ComputeShader)
         {

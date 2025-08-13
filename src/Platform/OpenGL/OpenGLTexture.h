@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Rendering/Texture.h"
+#include "Core/Log.h"
+
 #include <glad/glad.h>
 
 namespace Donut

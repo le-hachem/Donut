@@ -1,8 +1,8 @@
 #include "Shader.h"
 #include "Renderer.h"
+
 #include "Platform/OpenGL/OpenGLShader.h"
 #include "Platform/Vulkan/VulkanShader.h"
-#include <memory>
 
 namespace Donut
 {
@@ -45,32 +45,32 @@ namespace Donut
         }
     }
 
-    void ShaderLibrary::Add(const std::shared_ptr<Shader>& shader)
+    void ShaderLibrary::Add(const Ref<Shader>& shader)
     {
         auto& name = shader->GetName();
         Add(name, shader);
     }
 
-    void ShaderLibrary::Add(const std::string& name, const std::shared_ptr<Shader>& shader)
+    void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
     {
         m_Shaders[name] = shader;
     }
 
-    std::shared_ptr<Shader> ShaderLibrary::Load(const std::string& filepath)
+    Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
     {
-        auto shader = std::shared_ptr<Shader>(Shader::Create(filepath));
+        auto shader = Ref<Shader>(Shader::Create(filepath));
         Add(shader);
         return shader;
     }
 
-    std::shared_ptr<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+    Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
     {
-        auto shader = std::shared_ptr<Shader>(Shader::Create(filepath));
+        auto shader = Ref<Shader>(Shader::Create(filepath));
         Add(name, shader);
         return shader;
     }
 
-    std::shared_ptr<Shader> ShaderLibrary::Get(const std::string& name)
+    Ref<Shader> ShaderLibrary::Get(const std::string& name)
     {
         if (Exists(name))
             return m_Shaders[name];

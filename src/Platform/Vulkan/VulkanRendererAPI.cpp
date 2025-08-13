@@ -32,7 +32,7 @@ namespace Donut
 		// TODO(Hachem): Implement Vulkan face culling setting
 	}
 
-	void VulkanRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
+	void VulkanRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		// TODO(Hachem): Implement Vulkan indexed drawing
 	}

@@ -1,5 +1,4 @@
 #include "OpenGLTexture.h"
-#include <iostream>
 
 namespace Donut
 {
@@ -40,7 +39,7 @@ namespace Donut
         uint32_t whitePixel = 0xFFFFFFFF;
         glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, &whitePixel);
 
-        std::cout << "Created default texture (stb_image not available for loading: " << path << ")" << std::endl;
+        DONUT_INFO("Created default texture (stb_image not available for loading: ", path, ")");
     }
 
     OpenGLTexture2D::~OpenGLTexture2D()
@@ -53,7 +52,7 @@ namespace Donut
         uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
         if (size != m_Width * m_Height * bpp)
         {
-            std::cout << "Data must be entire texture!" << std::endl;
+            DONUT_ERROR("Data must be entire texture!");
             return;
         }
         

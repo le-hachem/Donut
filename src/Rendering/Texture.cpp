@@ -1,18 +1,19 @@
 #include "Texture.h"
 #include "Renderer.h"
-#include "../Platform/OpenGL/OpenGLTexture.h"
-#include "../Platform/Vulkan/VulkanTexture.h"
+
+#include "Platform/OpenGL/OpenGLTexture.h"
+#include "Platform/Vulkan/VulkanTexture.h"
 
 namespace Donut
 {
-    std::shared_ptr<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
+    Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
     {
         switch (Renderer::GetAPI())
         {
         case RendererAPI::API::OpenGL:
-            return std::make_shared<OpenGLTexture2D>(width, height);
+            return CreateRef<OpenGLTexture2D>(width, height);
         case RendererAPI::API::Vulkan:
-            return std::make_shared<VulkanTexture2D>(width, height);
+            return CreateRef<VulkanTexture2D>(width, height);
         case RendererAPI::API::None:
             return nullptr;
         default:
@@ -20,14 +21,14 @@ namespace Donut
         }
     }
 
-    std::shared_ptr<Texture2D> Texture2D::Create(const std::string& path)
+    Ref<Texture2D> Texture2D::Create(const std::string& path)
     {
         switch (Renderer::GetAPI())
         {
         case RendererAPI::API::OpenGL:
-            return std::make_shared<OpenGLTexture2D>(path);
+            return CreateRef<OpenGLTexture2D>(path);
         case RendererAPI::API::Vulkan:
-            return std::make_shared<VulkanTexture2D>(path);
+            return CreateRef<VulkanTexture2D>(path);
         case RendererAPI::API::None:
             return nullptr;
         default:

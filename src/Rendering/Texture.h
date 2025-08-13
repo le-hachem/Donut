@@ -1,6 +1,7 @@
 #pragma once
 
-#include <memory>
+#include "Core/Memory.h"
+
 #include <string>
 #include <glm/glm.hpp>
 
@@ -27,7 +28,7 @@ namespace Donut
         : public Texture
     {
     public:
-        static std::shared_ptr<Texture2D> Create(uint32_t width, uint32_t height);
-        static std::shared_ptr<Texture2D> Create(const std::string& path);
+        static Ref<Texture2D> Create(uint32_t width, uint32_t height);
+        static Ref<Texture2D> Create(const std::string& path);
     };
 };

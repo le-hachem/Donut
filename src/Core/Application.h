@@ -1,12 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <functional>
-
+#include "Memory.h"
 #include "Window.h"
 #include "Event.h"
-#include "StateManager.h"
 #include "Log.h"
+#include "StateManager.h"
 
 namespace Donut
 {
@@ -29,8 +27,8 @@ namespace Donut
         void OnRender();
         void OnEvent(Event& event);
     private:
-        std::unique_ptr<StateManager> m_StateManager;
-        std::unique_ptr<Window> m_Window;
+        Scope<StateManager> m_StateManager;
+        Scope<Window> m_Window;
 
         bool m_Running;
         bool m_Minimized;

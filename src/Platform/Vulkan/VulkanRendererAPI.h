@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Memory.h"
 #include "Rendering/Renderer.h"
 
 namespace Donut
@@ -16,7 +17,7 @@ namespace Donut
 		virtual void EnableDepthTest()                            override;
 		virtual void SetFaceCulling(bool enabled)                 override;
 
-		virtual void DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, 
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, 
 								 uint32_t indexCount = 0) override;
 	};
 };

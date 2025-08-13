@@ -19,7 +19,7 @@ namespace Donut
         m_CurrentStateName = "";
     }
 
-    void StateManager::RegisterState(const std::string& stateName, std::unique_ptr<State> state)
+    void StateManager::RegisterState(const std::string& stateName, Scope<State> state)
     {
         if (m_States.find(stateName) != m_States.end())
             DONUT_WARN("State '{}' already exists, overwriting", stateName);

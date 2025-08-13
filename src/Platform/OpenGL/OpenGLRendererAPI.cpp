@@ -1,7 +1,7 @@
 #include "OpenGLRendererAPI.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 
 namespace Donut
 {
@@ -9,13 +9,13 @@ namespace Donut
     {
         if (!glfwGetCurrentContext())
         {
-            std::cout << "No OpenGL context is current! Cannot initialize GLAD." << std::endl;
+            DONUT_ERROR("No OpenGL context is current! Cannot initialize GLAD.");
             return;
         }
         
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            std::cout << "Failed to initialize GLAD!" << std::endl;
+            DONUT_ERROR("Failed to initialize GLAD!");
             return;
         }
         
@@ -61,7 +61,7 @@ namespace Donut
             glDisable(GL_CULL_FACE);
     }
 
-    void OpenGLRendererAPI::DrawIndexed(const std::shared_ptr<VertexArray>& vertexArray, uint32_t indexCount)
+    void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
     {
         uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
         glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
