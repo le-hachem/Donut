@@ -17,14 +17,14 @@ namespace Donut
         }
     }
 
-    VertexArray* VertexArray::Create() 
+    Ref<VertexArray> VertexArray::Create() 
     {
         switch (Renderer::GetAPI()) 
         {
             case RendererAPI::API::OpenGL:
-                return new OpenGLVertexArray();
+                return CreateRef<OpenGLVertexArray>();
             case RendererAPI::API::Vulkan:
-                return new VulkanVertexArray();
+                return CreateRef<VulkanVertexArray>();
             default:
                 return nullptr;
         }

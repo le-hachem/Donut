@@ -2,9 +2,21 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <GLFW/glfw3.h>
+
+#define _USE_MATH_DEFINES
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace Donut
 {
+    enum class CameraMode
+    {
+        FPS,
+        Orbital
+    };
+
     class Camera
     {
     public:
@@ -12,6 +24,7 @@ namespace Donut
                float nearPlane = 0.1f, float farPlane = 100.0f);
         ~Camera() = default;
 
+        // FPS Camera Methods
         void SetPosition(const glm::vec3& position) { m_Position = position; RecalculateViewMatrix(); }
         void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; RecalculateViewMatrix(); }
         
@@ -42,10 +55,57 @@ namespace Donut
         void SetMovementSpeed(float speed) { m_MovementSpeed = speed;   }
         float GetMovementSpeed()    const  { return m_MovementSpeed;    }
 
+        // Orbital Camera Methods
+        void SetOrbitalMode(bool enabled);
+        bool IsOrbitalMode() const { return m_CameraMode == CameraMode::Orbital; }
+        
+        void SetTarget(const glm::vec3& target) { m_Target = target; }
+        const glm::vec3& GetTarget() const { return m_Target; }
+        
+        void SetRadius(double radius) { m_Radius = radius; }
+        double GetRadius() const { return m_Radius; }
+        
+        void SetMinRadius(double minRadius) { m_MinRadius = minRadius; }
+        double GetMinRadius() const { return m_MinRadius; }
+        
+        void SetMaxRadius(double maxRadius) { m_MaxRadius = maxRadius; }
+        double GetMaxRadius() const { return m_MaxRadius; }
+        
+        void SetAzimuth(float azimuth) { m_Azimuth = azimuth; }
+        float GetAzimuth() const { return m_Azimuth; }
+        
+        void SetElevation(float elevation) { m_Elevation = elevation; }
+        float GetElevation() const { return m_Elevation; }
+        
+        void SetOrbitSpeed(float orbitSpeed) { m_OrbitSpeed = orbitSpeed; }
+        float GetOrbitSpeed() const { return m_OrbitSpeed; }
+        
+        void SetZoomSpeed(double zoomSpeed) { m_ZoomSpeed = zoomSpeed; }
+        double GetZoomSpeed() const { return m_ZoomSpeed; }
+        
+        // Orbital camera position calculation
+        glm::vec3 GetOrbitalPosition() const;
+        
+        // Input handling for orbital camera
+        void ProcessOrbitalMouseMove(double x, double y);
+        void ProcessOrbitalMouseButton(int button, int action, int mods);
+        void ProcessOrbitalScroll(double xoffset, double yoffset);
+        
+        // State management
+        bool IsDragging() const { return m_Dragging; }
+        bool IsPanning() const { return m_Panning; }
+        bool IsMoving() const { return m_Moving; }
+
     private:
         void RecalculateViewMatrix();
         void RecalculateProjectionMatrix();
+        void UpdateOrbitalState();
+
     private:
+        // Camera mode
+        CameraMode m_CameraMode = CameraMode::FPS;
+
+        // FPS Camera members
         glm::mat4 m_ProjectionMatrix;
         glm::mat4 m_ViewMatrix;
         glm::mat4 m_ViewProjectionMatrix;
@@ -63,5 +123,20 @@ namespace Donut
         bool  m_FirstMouse       = true;
         float m_LastX            = 0.0f;
         float m_LastY            = 0.0f;
+
+        // Orbital Camera members
+        glm::vec3 m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
+        double m_Radius = 6.34194e10;
+        double m_MinRadius = 1e10;
+        double m_MaxRadius = 1e12;
+        float m_Azimuth = 0.0f;
+        float m_Elevation = static_cast<float>(M_PI) / 2.0f;
+        float m_OrbitSpeed = 0.01f;
+        double m_ZoomSpeed = 25e9f;
+        bool m_Dragging = false;
+        bool m_Panning = false;
+        bool m_Moving = false;
+        double m_OrbitalLastX = 0.0;
+        double m_OrbitalLastY = 0.0;
     };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core/Memory.h"
 #include <cstdint>
 
 namespace Donut
@@ -13,6 +14,6 @@ namespace Donut
         virtual void     Unbind()   const = 0;
         virtual uint32_t GetCount() const = 0;
 
-        static IndexBuffer* Create(const uint32_t* indices, uint32_t count);
+        static Ref<IndexBuffer> Create(const uint32_t* indices, uint32_t count);
     };
 };

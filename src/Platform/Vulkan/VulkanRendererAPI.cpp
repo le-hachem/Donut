@@ -27,9 +27,24 @@ namespace Donut
 		// TODO(Hachem): Implement Vulkan depth test enabling
 	}
 
+	void VulkanRendererAPI::DisableDepthTest()
+	{
+		// TODO(Hachem): Implement Vulkan depth test disabling
+	}
+
 	void VulkanRendererAPI::SetFaceCulling(bool enabled)
 	{
 		// TODO(Hachem): Implement Vulkan face culling setting
+	}
+
+	void VulkanRendererAPI::EnableBlending()
+	{
+		// TODO(Hachem): Implement Vulkan blending enabling
+	}
+
+	void VulkanRendererAPI::DisableBlending()
+	{
+		// TODO(Hachem): Implement Vulkan blending disabling
 	}
 
 	void VulkanRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)

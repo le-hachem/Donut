@@ -3,6 +3,8 @@
 #include "Core/State.h"
 #include "Core/Event.h"
 #include "Core/Log.h"
+#include "Engine/Engine.h"
+#include <vector>
 
 namespace Donut
 {
@@ -18,5 +20,9 @@ namespace Donut
         void OnRender()                override;
         void OnImUIRender()            override;
         void OnEvent(Event& event)     override;
+    
+    private:
+        Engine m_Engine;
+        bool   m_Initialized = false;
     };
 };

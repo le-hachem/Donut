@@ -35,9 +35,9 @@ namespace Donut
 
         virtual const std::string& GetName() const = 0;
 
-        static Shader* Create(const std::string& filepath);
-        static Shader* Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
-        static Shader* CreateCompute(const std::string& name, const std::string& computeSrc);
+        static Ref<Shader> Create(const std::string& filepath);
+        static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+        static Ref<Shader> CreateCompute(const std::string& name, const std::string& computeSrc);
     };
 
     class ShaderLibrary
