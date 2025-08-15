@@ -2,10 +2,6 @@
 
 #include <vector>
 #include <iostream>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <sstream>
 #include <chrono>
@@ -15,16 +11,27 @@
 #include "Core/Camera.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/Shader.h"
-#include "Rendering/Texture.h"
 #include "Rendering/VertexArray.h"
+#include "Rendering/Texture.h"
 #include "Rendering/UniformBuffer.h"
+#include "Rendering/TextureManager.h"
+
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#define _USE_MATH_DEFINES
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace Donut
 {
     const double c = 299792458.0;
     const double G = 6.67430e-11;
 
-    struct BlackHole 
+    struct BlackHole
     {
         glm::vec3 m_Position;
         double m_Mass;
@@ -32,13 +39,12 @@ namespace Donut
         double m_Rs;
 
         BlackHole(glm::vec3 pos, float mass) 
-            : m_Position(pos),
-              m_Mass(mass) 
+            : m_Position(pos), m_Mass(mass)
         {
             m_Rs = 2.0 * G * m_Mass / (c * c);
         }
 
-        bool Intercept(float px, float py, float pz) const 
+        bool Intercept(float px, float py, float pz) const
         {
             double dx = double(px) - double(m_Position.x);
             double dy = double(py) - double(m_Position.y);
@@ -48,11 +54,11 @@ namespace Donut
         }
     };
 
-    struct ObjectData 
+    struct ObjectData
     {
         glm::vec4 m_PosRadius;
         glm::vec4 m_Color;
-        float m_Mass;
+        float     m_Mass;
         glm::vec3 m_Velocity = glm::vec3(0.0f, 0.0f, 0.0f);
     };
 
@@ -62,8 +68,6 @@ namespace Donut
         Engine();
         ~Engine() = default;
 
-        void GenerateGrid(const std::vector<ObjectData>& objects);
-        void DrawGrid(const glm::mat4& viewProj);
         void DrawFullScreenQuad();
         void DispatchCompute(const Camera& cam);
         void UploadCameraUBO(const Camera& cam);
@@ -73,46 +77,47 @@ namespace Donut
         void UpdatePhysics(float deltaTime);
         void UpdateWindowDimensions();
 
-              Camera& GetCamera()       { return m_Camera; }
-        const Camera& GetCamera() const { return m_Camera; }
-        
-        const std::vector<ObjectData>& GetObjects() const { return m_Objects; }
-              std::vector<ObjectData>& GetObjects()       { return m_Objects; }
-        
-        bool GetGravity() const       { return m_Gravity;    }
-        void SetGravity(bool gravity) { m_Gravity = gravity; }
-        
-        int GetWidth()         const { return m_Width;         }
-        int GetHeight()        const { return m_Height;        }
-        int GetComputeWidth()  const { return m_ComputeWidth;  }
-        int GetComputeHeight() const { return m_ComputeHeight; }
+        int GetWidth()  const { return m_Width;  }
+        int GetHeight() const { return m_Height; }
 
+        std::vector<ObjectData>& GetObjects() { return m_Objects; }
+        BlackHole&               GetSagA()    { return m_SagA;    }
+        Camera&                  GetCamera()  { return m_Camera;  }
+        bool&                    GetGravity() { return m_Gravity; }
+
+        void  UpdatePerformance(float deltaTime);
+        void  SetTargetFPS(int fps)        { m_TargetFPS = fps;                             }
+        int   GetTargetFPS()         const { return m_TargetFPS;                            }
+        float GetCurrentFPS()        const { return m_CurrentFPS;                           }
+        void  SetComputeHeight(int height) { m_ComputeHeight = height;                      }
+        int   GetComputeHeight()     const { return m_ComputeHeight;                        }
+        int   GetComputeWidth()      const { return (m_Width * m_ComputeHeight) / m_Height; }
+        void  UpdateComputeDimensions();
     private:
-        std::string CreateBasicVertexShader();
-        std::string CreateBasicFragmentShader();
-        std::string LoadComputeShader(const std::string& path);
+        Ref<Shader> CreateComputeProgram(const char* path);
+        std::pair<Ref<VertexArray>, Ref<Texture2D>> QuadVAO();
     private:
-        Ref<Shader>        m_GridShader;
-        Ref<Shader>        m_QuadShader;
-        Ref<Shader>        m_ComputeShader;
-        Ref<Texture2D>     m_Texture;
         Ref<VertexArray>   m_QuadVAO;
-        Ref<VertexArray>   m_GridVAO;
+        Ref<Texture2D>     m_Texture;
+        Ref<Shader>        m_ShaderProgram;
+        Ref<Shader>        m_ComputeProgram;
         Ref<UniformBuffer> m_CameraUBO;
         Ref<UniformBuffer> m_DiskUBO;
         Ref<UniformBuffer> m_ObjectsUBO;
-        
-        int   m_GridIndexCount = 0;
+
         int   m_Width;
         int   m_Height;
-        int   m_ComputeWidth;
-        int   m_ComputeHeight;
-        float m_WidthScale = 100000000000.0f;
-        float m_HeightScale = 75000000000.0f;
+        float m_Width_f = 100*10e10f;
+        float m_Height_f = 75*10e10f;
+
+        int   m_TargetFPS     = 60;
+        float m_CurrentFPS    = 60.0f;
+        float m_LastFrameTime = 0.0f;
+        int   m_ComputeHeight = 320;
 
         std::vector<ObjectData> m_Objects;
         BlackHole               m_SagA;
         Camera                  m_Camera;
         bool                    m_Gravity = false;
     };
-}
+};

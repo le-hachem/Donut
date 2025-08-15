@@ -26,5 +26,15 @@ namespace Donut
 
         virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, 
                                  uint32_t indexCount = 0)         override;
+        
+        virtual void DrawArrays(uint32_t vertexCount, 
+                                uint32_t first = 0)               override;
+        virtual void DrawLines(const Ref<VertexArray>& vertexArray, 
+                               uint32_t indexCount = 0)           override;
+        virtual void BindTexture(uint32_t textureID, 
+                                 uint32_t slot = 0)               override;
+        virtual void BindImageTexture(uint32_t textureID, 
+                                      uint32_t slot = 0, 
+                                      bool readOnly = false)      override;
     };
 };

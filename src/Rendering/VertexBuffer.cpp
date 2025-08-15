@@ -6,14 +6,14 @@
 
 namespace Donut
 {
-    Ref<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size)
+    VertexBuffer* VertexBuffer::Create(const void* data, uint32_t size)
     {
         switch (Renderer::GetAPI()) 
         {
             case RendererAPI::API::OpenGL:
-                return CreateRef<OpenGLVertexBuffer>(data, size);
+                return new OpenGLVertexBuffer(data, size);
             case RendererAPI::API::Vulkan:
-                return CreateRef<VulkanVertexBuffer>((float*)data, size);
+                return new VulkanVertexBuffer((float*)data, size);
             default:
                 return nullptr;
         }

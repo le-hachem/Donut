@@ -20,23 +20,31 @@ namespace Donut
     public:
         virtual ~RendererAPI() = default;
 
-        virtual void Init()                                       = 0;
+        virtual void Init()                                               = 0;
         virtual void SetViewport(uint32_t x, uint32_t y, 
-                                 uint32_t width, uint32_t height) = 0;
-        virtual void SetClearColor(const glm::vec4& color)        = 0;
-        virtual void Clear()                                      = 0;
-        virtual void EnableDepthTest()                            = 0;
-        virtual void DisableDepthTest()                           = 0;
-        virtual void SetFaceCulling(bool enabled)                 = 0;
-        virtual void EnableBlending()                             = 0;
-        virtual void DisableBlending()                            = 0;
+                                 uint32_t width, uint32_t height)         = 0;
+        virtual void SetClearColor(const glm::vec4& color)                = 0;
+        virtual void Clear()                                              = 0;
+        virtual void EnableDepthTest()                                    = 0;
+        virtual void DisableDepthTest()                                   = 0;
+        virtual void SetFaceCulling(bool enabled)                         = 0;
+        virtual void EnableBlending()                                     = 0;
+        virtual void DisableBlending()                                    = 0;
 
         virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, 
-                                 uint32_t indexCount = 0)         = 0;
+                                 uint32_t indexCount = 0)                 = 0;
+        
+        virtual void DrawArrays(uint32_t vertexCount, uint32_t first = 0) = 0;
+        virtual void DrawLines(const Ref<VertexArray>& vertexArray, 
+                               uint32_t indexCount = 0)                   = 0;
+        virtual void BindTexture(uint32_t textureID, uint32_t slot = 0)   = 0;
+        virtual void BindImageTexture(uint32_t textureID, 
+                                      uint32_t slot = 0, 
+                                      bool readOnly = false)              = 0;
 
         inline static API GetAPI()         { return s_API; }
         inline static void SetAPI(API api) { s_API = api;  }
-        static Ref<RendererAPI> Create();
+        static Scope<RendererAPI> Create();
     private:
         static API s_API;
     };
@@ -94,8 +102,28 @@ namespace Donut
             s_RendererAPI->DrawIndexed(vertexArray, indexCount);
         }
 
+        inline static void DrawArrays(uint32_t vertexCount, uint32_t first = 0)
+        {
+            s_RendererAPI->DrawArrays(vertexCount, first);
+        }
+
+        inline static void DrawLines(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0)
+        {
+            s_RendererAPI->DrawLines(vertexArray, indexCount);
+        }
+
+        inline static void BindTexture(uint32_t textureID, uint32_t slot = 0)
+        {
+            s_RendererAPI->BindTexture(textureID, slot);
+        }
+
+        inline static void BindImageTexture(uint32_t textureID, uint32_t slot = 0, bool readOnly = false)
+        {
+            s_RendererAPI->BindImageTexture(textureID, slot, readOnly);
+        }
+
     private:
-        static Ref<RendererAPI> s_RendererAPI;
+        static Scope<RendererAPI> s_RendererAPI;
     };
 
     class Renderer 

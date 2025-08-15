@@ -6,14 +6,14 @@
 
 namespace Donut 
 {
-    Ref<IndexBuffer> IndexBuffer::Create(const uint32_t* indices, uint32_t count) 
+    IndexBuffer* IndexBuffer::Create(const uint32_t* indices, uint32_t count) 
     {
         switch (Renderer::GetAPI()) 
         {
             case RendererAPI::API::OpenGL:
-                return CreateRef<OpenGLIndexBuffer>(indices, count);
+                return new OpenGLIndexBuffer(indices, count);
             case RendererAPI::API::Vulkan:
-                return CreateRef<VulkanIndexBuffer>((uint32_t*)indices, count);
+                return new VulkanIndexBuffer((uint32_t*)indices, count);
             default:
                 return nullptr;
         }

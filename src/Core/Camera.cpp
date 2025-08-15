@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 #include <glm/gtc/quaternion.hpp>
+#include <GLFW/glfw3.h>
 
 namespace Donut
 {
@@ -50,8 +51,10 @@ namespace Donut
         else if (m_CameraMode == CameraMode::Orbital)
         {
             glm::vec3 position = GetOrbitalPosition();
-            glm::vec3 worldUp(0.0f, 1.0f, 0.0f);
-            m_ViewMatrix = glm::lookAt(position, m_Target, worldUp);
+            glm::vec3 target = m_OrbitalTarget;
+            glm::vec3 up(0.0f, 1.0f, 0.0f);
+            
+            m_ViewMatrix = glm::lookAt(position, target, up);
             m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
         }
     }
@@ -158,77 +161,65 @@ namespace Donut
         }
     }
 
-    // Orbital Camera Methods
-    void Camera::SetOrbitalMode(bool enabled)
-    {
-        m_CameraMode = enabled ? CameraMode::Orbital : CameraMode::FPS;
-        RecalculateViewMatrix();
-    }
-
     glm::vec3 Camera::GetOrbitalPosition() const
     {
         float clampedElevation = glm::clamp(m_Elevation, 0.01f, float(M_PI) - 0.01f);
-        return glm::vec3(
-            m_Radius * sin(clampedElevation) * cos(m_Azimuth),
-            m_Radius * cos(clampedElevation),
-            m_Radius * sin(clampedElevation) * sin(m_Azimuth)
+        return glm::vec3
+        (
+            m_OrbitalRadius * sin(clampedElevation) * cos(m_Azimuth),
+            m_OrbitalRadius * cos(clampedElevation),
+            m_OrbitalRadius * sin(clampedElevation) * sin(m_Azimuth)
         );
+    }
+
+    void Camera::UpdateOrbital()
+    {
+        m_OrbitalTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        if (m_Dragging || m_Panning)
+            m_Moving = true;
+        else
+            m_Moving = false;
+        RecalculateViewMatrix();
     }
 
     void Camera::ProcessOrbitalMouseMove(double x, double y)
     {
-        if (m_Dragging && !m_Panning) 
+        if (m_Dragging && !m_Panning)
         {
-            float dx = float(x - m_OrbitalLastX);
-            float dy = float(y - m_OrbitalLastY);
+            float dx = float(x - m_LastX_Orbital);
+            float dy = float(y - m_LastY_Orbital);
             
-            m_Azimuth += dx * m_OrbitSpeed;
-            m_Elevation -= dy * m_OrbitSpeed;
+            m_Azimuth   += dx * m_OrbitalSpeed;
+            m_Elevation -= dy * m_OrbitalSpeed;
             m_Elevation = glm::clamp(m_Elevation, 0.01f, float(M_PI) - 0.01f);
         }
         
-        m_OrbitalLastX = x;
-        m_OrbitalLastY = y;
-        UpdateOrbitalState();
-        RecalculateViewMatrix();
+        m_LastX_Orbital = x;
+        m_LastY_Orbital = y;
+        UpdateOrbital();
     }
 
     void Camera::ProcessOrbitalMouseButton(int button, int action, int mods)
     {
-        if (button == GLFW_MOUSE_BUTTON_LEFT) 
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
         {
-            if (action == GLFW_PRESS) 
+            if (action == GLFW_PRESS)
             {
                 m_Dragging = true;
                 m_Panning = false;
-            } 
-            else if (action == GLFW_RELEASE) 
+            }
+            else if (action == GLFW_RELEASE)
             {
                 m_Dragging = false;
                 m_Panning = false;
             }
         }
-        UpdateOrbitalState();
     }
 
     void Camera::ProcessOrbitalScroll(double xoffset, double yoffset)
     {
-        m_Radius -= yoffset * m_ZoomSpeed;
-        m_Radius = glm::clamp(m_Radius, m_MinRadius, m_MaxRadius);
-        UpdateOrbitalState();
-        RecalculateViewMatrix();
-    }
-
-    void Camera::UpdateOrbitalState()
-    {
-        m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
-        if (m_Dragging || m_Panning) 
-        {
-            m_Moving = true;
-        } 
-        else 
-        {
-            m_Moving = false;
-        }
+        m_OrbitalRadius -= yoffset * m_ZoomSpeed;
+        m_OrbitalRadius = glm::clamp(m_OrbitalRadius, m_OrbitalMinRadius, m_OrbitalMaxRadius);
+        UpdateOrbital();
     }
 }

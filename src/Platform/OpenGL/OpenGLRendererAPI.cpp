@@ -83,4 +83,27 @@ namespace Donut
         glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
+
+    void OpenGLRendererAPI::DrawArrays(uint32_t vertexCount, uint32_t first)
+    {
+        glDrawArrays(GL_TRIANGLES, first, vertexCount);
+    }
+
+    void OpenGLRendererAPI::DrawLines(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
+    {
+        uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+        glDrawElements(GL_LINES, count, GL_UNSIGNED_INT, nullptr);
+    }
+
+    void OpenGLRendererAPI::BindTexture(uint32_t textureID, uint32_t slot)
+    {
+        glActiveTexture(GL_TEXTURE0 + slot);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+    }
+
+    void OpenGLRendererAPI::BindImageTexture(uint32_t textureID, uint32_t slot, bool readOnly)
+    {
+        glBindImageTexture(slot, textureID, 0, GL_FALSE, 0, 
+                          readOnly ? GL_READ_ONLY : GL_WRITE_ONLY, GL_RGBA8);
+    }
 };

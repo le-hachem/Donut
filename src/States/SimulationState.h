@@ -23,6 +23,6 @@ namespace Donut
     
     private:
         Engine m_Engine;
-        bool   m_Initialized = false;
+        bool m_Initialized = false;
     };
 };

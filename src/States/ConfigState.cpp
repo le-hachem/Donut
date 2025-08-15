@@ -22,7 +22,7 @@ namespace Donut
     
     void ConfigState::OnRender()
     {
-        Renderer::SetClearColor({ 0.1f, 0.1f, 0.2f, 1.0f });
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         Renderer::Clear();
     }
     

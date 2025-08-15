@@ -22,11 +22,11 @@ namespace Donut
     
     void SimulationState::OnUpdate(float deltaTime)
     {
-        
+        m_Engine.UpdatePerformance(deltaTime);
         m_Engine.UpdateWindowDimensions();
         m_Engine.UpdatePhysics(deltaTime);
-        
-        if (m_Engine.GetCamera().IsDragging()) 
+
+        if (m_Engine.GetCamera().IsDragging())
         {
             GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
             double xpos, ypos;
@@ -37,34 +37,28 @@ namespace Donut
     
     void SimulationState::OnRender()
     {
-        if (!m_Initialized) return;
-        
         RenderCommand::SetClearColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         RenderCommand::Clear();
-        
-        m_Engine.GenerateGrid(m_Engine.GetObjects());
-        
-        glm::mat4 view = glm::lookAt(m_Engine.GetCamera().GetOrbitalPosition(), m_Engine.GetCamera().GetTarget(), glm::vec3(0,1,0));
-        glm::mat4 proj = glm::perspective(glm::radians(60.0f), float(m_Engine.GetWidth())/m_Engine.GetHeight(), 1e9f, 1e14f);
-        glm::mat4 viewProj = proj * view;
-        
-        m_Engine.DrawGrid(viewProj);
-        
         RenderCommand::SetViewport(0, 0, m_Engine.GetWidth(), m_Engine.GetHeight());
+
         m_Engine.DispatchCompute(m_Engine.GetCamera());
         m_Engine.DrawFullScreenQuad();
     }
     
     void SimulationState::OnEvent(Event& event)
     {
-        if (!m_Initialized) return;
-        
         if (event.GetEventType() == EventType::MouseButtonPressed)
         {
             MouseButtonPressedEvent& e = (MouseButtonPressedEvent&)event;
             int button = e.GetMouseButton();
             
-            m_Engine.GetCamera().ProcessOrbitalMouseButton(button, GLFW_PRESS, 0);
+            GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+            Camera& camera = m_Engine.GetCamera();
+            double lastX = camera.GetLastX();
+            double lastY = camera.GetLastY();
+            glfwGetCursorPos(window, &lastX, &lastY);
+            
+            camera.ProcessOrbitalMouseButton(button, GLFW_PRESS, 0);
         }
         else if (event.GetEventType() == EventType::MouseButtonReleased)
         {
@@ -84,7 +78,7 @@ namespace Donut
             KeyPressedEvent& e = (KeyPressedEvent&)event;
             if (e.GetKeyCode() == GLFW_KEY_G)
             {
-                m_Engine.SetGravity(!m_Engine.GetGravity());
+                m_Engine.GetGravity() = !m_Engine.GetGravity();
                 DONUT_INFO("Gravity turned {}", m_Engine.GetGravity() ? "ON" : "OFF");
             }
         }
@@ -109,6 +103,27 @@ namespace Donut
         
         ImGui::Separator();
         
+        ImGui::Text("Performance:");
+        ImGui::Text("Engine FPS: %.1f", m_Engine.GetCurrentFPS());
+        ImGui::Text("Target FPS: %d", m_Engine.GetTargetFPS());
+        
+        int targetFPS = m_Engine.GetTargetFPS();
+        if (ImGui::SliderInt("Target FPS", &targetFPS, 30, 120))
+        {
+            m_Engine.SetTargetFPS(targetFPS);
+        }
+        
+        int computeHeight = m_Engine.GetComputeHeight();
+        if (ImGui::SliderInt("Compute Height", &computeHeight, 64, 2048))
+        {
+            m_Engine.SetComputeHeight(computeHeight);
+            m_Engine.UpdateComputeDimensions();
+        }
+        
+        ImGui::Text("Compute Width: %d (auto-calculated)", m_Engine.GetComputeWidth());
+        
+        ImGui::Separator();
+        
         ImGui::Text("Controls:");
         ImGui::Text("Left Mouse: Orbit camera");
         ImGui::Text("Scroll: Zoom in/out");
@@ -118,16 +133,15 @@ namespace Donut
         ImGui::Separator();
         
         ImGui::Text("Physics:");
-        bool gravity = m_Engine.GetGravity();
-        if (ImGui::Checkbox("Gravity Enabled", &gravity))
-            m_Engine.SetGravity(gravity);
+        bool& gravity = m_Engine.GetGravity();
+        ImGui::Checkbox("Gravity Enabled", &gravity);
         
         ImGui::Text("Camera:");
         ImGui::Text("Position: (%.2e, %.2e, %.2e)", 
                    m_Engine.GetCamera().GetOrbitalPosition().x, 
                    m_Engine.GetCamera().GetOrbitalPosition().y, 
                    m_Engine.GetCamera().GetOrbitalPosition().z);
-        ImGui::Text("Radius: %.2e", m_Engine.GetCamera().GetRadius());
+        ImGui::Text("Radius: %.2e", m_Engine.GetCamera().GetOrbitalRadius());
         ImGui::Text("Azimuth: %.2f", m_Engine.GetCamera().GetAzimuth());
         ImGui::Text("Elevation: %.2f", m_Engine.GetCamera().GetElevation());
         

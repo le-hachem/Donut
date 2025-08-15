@@ -2,16 +2,15 @@
 layout(local_size_x = 16, local_size_y = 16) in;
 
 layout(binding = 0, rgba8) writeonly uniform image2D outImage;
-
 layout(std140, binding = 1) uniform Camera 
 {
-    vec3 camPos;     float _pad0;
-    vec3 camRight;   float _pad1;
-    vec3 camUp;      float _pad2;
-    vec3 camForward; float _pad3;
+    vec3  camPos;     float _pad0;
+    vec3  camRight;   float _pad1;
+    vec3  camUp;      float _pad2;
+    vec3  camForward; float _pad3;
     float tanHalfFov;
     float aspect;
-    bool moving;
+    bool  moving;
     int   _pad4;
 } cam;
 
@@ -25,15 +24,19 @@ layout(std140, binding = 2) uniform Disk
 
 layout(std140, binding = 3) uniform Objects 
 {
-    int numObjects;
-    vec4 objPosRadius[16];
-    vec4 objColor[16];
-    float mass[16]; 
+    int    numObjects;
+    vec4   objPosRadius[16];
+    vec4   objColor[16];
+    float  mass[16]; 
 };
 
-const float SagA_rs = 1.269e10;
-const float D_LAMBDA = 1e7;
+const float  SagA_rs  = 1.269e10;
+const float  D_LAMBDA = 1e7;
 const double ESCAPE_R = 1e30;
+
+const int   MAX_STEPS_MOVING   = 60000;
+const int   MAX_STEPS_STATIC   = 30000;
+const float EARLY_EXIT_DISTANCE = 5e11;
 
 vec4 objectColor = vec4(0.0);
 vec3 hitCenter = vec3(0.0);
@@ -41,49 +44,63 @@ float hitRadius = 0.0;
 
 struct Ray 
 {
-    float x, y, z, radius, theta, phi;
-    float dRadius, dTheta, dPhi;
-    float energy, angularMomentum;
+    float x, y, z;
+    float r, theta, phi;
+    float dr, dtheta, dphi;
+    float E, L;
 };
 
-Ray InitRay(vec3 position, vec3 direction) 
+Ray InitRay(vec3 pos, vec3 dir) 
 {
     Ray ray;
-    ray.x = position.x; 
-    ray.y = position.y; 
-    ray.z = position.z;
-    ray.radius = length(position);
-    ray.theta = acos(position.z / ray.radius);
-    ray.phi = atan(position.y, position.x);
+    ray.x     = pos.x; 
+    ray.y     = pos.y; 
+    ray.z     = pos.z;
+    ray.r     = length(pos);
+    ray.theta = acos(pos.z / ray.r);
+    ray.phi   = atan(pos.y, pos.x);
 
-    float dx = direction.x, dy = direction.y, dz = direction.z;
-    ray.dRadius = sin(ray.theta) * cos(ray.phi) * dx + sin(ray.theta) * sin(ray.phi) * dy + cos(ray.theta) * dz;
-    ray.dTheta = (cos(ray.theta) * cos(ray.phi) * dx + cos(ray.theta) * sin(ray.phi) * dy - sin(ray.theta) * dz) / ray.radius;
-    ray.dPhi = (-sin(ray.phi) * dx + cos(ray.phi) * dy) / (ray.radius * sin(ray.theta));
+    float dx = dir.x;
+    float dy = dir.y;
+    float dz = dir.z;
 
-    ray.angularMomentum = ray.radius * ray.radius * sin(ray.theta) * ray.dPhi;
-    float f = 1.0 - SagA_rs / ray.radius;
-    float dt_dL = sqrt((ray.dRadius * ray.dRadius) / f + ray.radius * ray.radius * (ray.dTheta * ray.dTheta + sin(ray.theta) * sin(ray.theta) * ray.dPhi * ray.dPhi));
-    ray.energy = f * dt_dL;
+    ray.dr     = sin(ray.theta)*cos(ray.phi)*dx + 
+                 sin(ray.theta)*sin(ray.phi)*dy + 
+                 cos(ray.theta)*dz;
+
+    ray.dtheta = (cos(ray.theta)*cos(ray.phi)*dx + 
+                  cos(ray.theta)*sin(ray.phi)*dy - 
+                  sin(ray.theta)*dz) / ray.r;
+
+    ray.dphi   = (-sin(ray.phi)*dx + cos(ray.phi)*dy) / 
+                 (ray.r * sin(ray.theta));
+
+    ray.L = ray.r * ray.r * sin(ray.theta) * ray.dphi;
+    float f = 1.0 - SagA_rs / ray.r;
+    float dt_dL = sqrt((ray.dr*ray.dr)/f + 
+                       ray.r*ray.r*(ray.dtheta*ray.dtheta + 
+                       sin(ray.theta)*sin(ray.theta)*
+                       ray.dphi*ray.dphi));
+    ray.E = f * dt_dL;
 
     return ray;
 }
 
-bool Intercept(Ray ray, float schwarzschildRadius) 
+bool Intercept(Ray ray, float rs) 
 {
-    return ray.radius <= schwarzschildRadius;
+    return ray.r <= rs;
 }
 
 bool InterceptObject(Ray ray) 
 {
-    vec3 position = vec3(ray.x, ray.y, ray.z);
+    vec3 P = vec3(ray.x, ray.y, ray.z);
     
     for (int i = 0; i < numObjects; ++i) 
     {
-        vec3 center = objPosRadius[i].xyz;
+        vec3  center = objPosRadius[i].xyz;
         float radius = objPosRadius[i].w;
-        
-        if (distance(position, center) <= radius) 
+
+        if (distance(P, center) <= radius)
         {
             objectColor = objColor[i];
             hitCenter = center;
@@ -91,75 +108,94 @@ bool InterceptObject(Ray ray)
             return true;
         }
     }
-    
+
     return false;
 }
 
-void GeodesicRHS(Ray ray, out vec3 derivatives1, out vec3 derivatives2) 
+void GeodesicRHS(Ray ray, out vec3 d1, out vec3 d2) 
 {
-    float radius = ray.radius, theta = ray.theta;
-    float dRadius = ray.dRadius, dTheta = ray.dTheta, dPhi = ray.dPhi;
-    float f = 1.0 - SagA_rs / radius;
-    float dt_dL = ray.energy / f;
+    float r      = ray.r;
+    float theta  = ray.theta;
+    float dr     = ray.dr;
+    float dtheta = ray.dtheta;
+    float dphi   = ray.dphi;
+    float f      = 1.0 - SagA_rs / r;
+    float dt_dL  = ray.E / f;
 
-    derivatives1 = vec3(dRadius, dTheta, dPhi);
-    derivatives2.x = -(SagA_rs / (2.0 * radius * radius)) * f * dt_dL * dt_dL
-         + (SagA_rs / (2.0 * radius * radius * f)) * dRadius * dRadius
-         + radius * (dTheta * dTheta + sin(theta) * sin(theta) * dPhi * dPhi);
-    derivatives2.y = -2.0 * dRadius * dTheta / radius + sin(theta) * cos(theta) * dPhi * dPhi;
-    derivatives2.z = -2.0 * dRadius * dPhi / radius - 2.0 * cos(theta) / sin(theta) * dTheta * dPhi;
+    d1 = vec3(dr, dtheta, dphi);
+    d2.x = - (SagA_rs / (2.0 * r*r)) * f * dt_dL * dt_dL
+           + (SagA_rs / (2.0 * r*r * f)) * dr * dr
+           + r * (dtheta*dtheta + sin(theta)*sin(theta)*dphi*dphi);
+    d2.y = -2.0*dr*dtheta/r + sin(theta)*cos(theta)*dphi*dphi;
+    d2.z = -2.0*dr*dphi/r - 2.0*cos(theta)/(sin(theta)) * dtheta * dphi;
 }
 
-void RK4Step(inout Ray ray, float deltaLambda) 
+void RK4Step(inout Ray ray, float dL) 
 {
     vec3 k1a, k1b;
     GeodesicRHS(ray, k1a, k1b);
 
-    ray.radius += deltaLambda * k1a.x;
-    ray.theta += deltaLambda * k1a.y;
-    ray.phi += deltaLambda * k1a.z;
-    ray.dRadius += deltaLambda * k1b.x;
-    ray.dTheta += deltaLambda * k1b.y;
-    ray.dPhi += deltaLambda * k1b.z;
+    ray.r      += dL * k1a.x;
+    ray.theta  += dL * k1a.y;
+    ray.phi    += dL * k1a.z;
+    ray.dr     += dL * k1b.x;
+    ray.dtheta += dL * k1b.y;
+    ray.dphi   += dL * k1b.z;
 
-    ray.x = ray.radius * sin(ray.theta) * cos(ray.phi);
-    ray.y = ray.radius * sin(ray.theta) * sin(ray.phi);
-    ray.z = ray.radius * cos(ray.theta);
+    ray.x = ray.r * sin(ray.theta) * cos(ray.phi);
+    ray.y = ray.r * sin(ray.theta) * sin(ray.phi);
+    ray.z = ray.r * cos(ray.theta);
 }
 
-bool CrossesEquatorialPlane(vec3 oldPosition, vec3 newPosition) 
+bool CrossesEquatorialPlane(vec3 oldPos, vec3 newPos) 
 {
-    bool crossed = (oldPosition.y * newPosition.y < 0.0);
-    float radius = length(vec2(newPosition.x, newPosition.z));
-    return crossed && (radius >= disk_r1 && radius <= disk_r2);
+    bool crossed = (oldPos.y * newPos.y < 0.0);
+    float r = length(vec2(newPos.x, newPos.z));
+    return crossed && (r >= disk_r1 && r <= disk_r2);
 }
 
 void main() 
 {
-    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
-    int width = imageSize(outImage).x;
-    int height = imageSize(outImage).y;
-    
-    if (pixel.x >= width || pixel.y >= height) 
+    ivec2 pix  = ivec2(gl_GlobalInvocationID.xy);
+    int WIDTH  = imageSize(outImage).x;
+    int HEIGHT = imageSize(outImage).y;
+
+    if (pix.x >= WIDTH || 
+        pix.y >= HEIGHT) 
         return;
 
-    float u = (2.0 * (pixel.x + 0.5) / width - 1.0) * cam.aspect * cam.tanHalfFov;
-    float v = (1.0 - 2.0 * (pixel.y + 0.5) / height) * cam.tanHalfFov;
-    vec3 direction = normalize(u * cam.camRight - v * cam.camUp + cam.camForward);
-    Ray ray = InitRay(cam.camPos, direction);
+    float u = (2.0 * (pix.x + 0.5) / WIDTH - 1.0) * 
+              cam.aspect * cam.tanHalfFov;
+    float v = (1.0 - 2.0 * (pix.y + 0.5) / HEIGHT) * 
+               cam.tanHalfFov;
+    vec3 dir = normalize(u * cam.camRight - 
+                         v * cam.camUp    + 
+                         cam.camForward);
+    Ray ray = InitRay(cam.camPos, dir);
 
-    vec4 color = vec4(0.0);
-    vec3 prevPosition = vec3(ray.x, ray.y, ray.z);
-    float lambda = 0.0;
+    vec4  color   = vec4(0.0);
+    vec3  prevPos = vec3(ray.x, ray.y, ray.z);
+    float lambda  = 0.0;
 
     bool hitBlackHole = false;
-    bool hitDisk = false;
-    bool hitObject = false;
+    bool hitDisk      = false;
+    bool hitObject    = false;
 
-    int steps = cam.moving ? 60000 : 60000;
+    int maxSteps = cam.moving ? MAX_STEPS_MOVING : MAX_STEPS_STATIC;
+    
+    float cameraDistance = length(cam.camPos);
+    if (cameraDistance > 1e12)
+        maxSteps = maxSteps / 4;
+    else if (cameraDistance > 5e11)
+        maxSteps = maxSteps / 2;
 
-    for (int i = 0; i < steps; ++i) 
+    for (int i = 0; i < maxSteps; ++i) 
     {
+        if (ray.r > EARLY_EXIT_DISTANCE) 
+            break;
+        if (ray.r > ESCAPE_R) 
+            break;
+        
         if (Intercept(ray, SagA_rs)) 
         { 
             hitBlackHole = true; 
@@ -169,9 +205,9 @@ void main()
         RK4Step(ray, D_LAMBDA);
         lambda += D_LAMBDA;
 
-        vec3 newPosition = vec3(ray.x, ray.y, ray.z);
+        vec3 newPos = vec3(ray.x, ray.y, ray.z);
         
-        if (CrossesEquatorialPlane(prevPosition, newPosition)) 
+        if (CrossesEquatorialPlane(prevPos, newPos)) 
         { 
             hitDisk = true; 
             break; 
@@ -183,33 +219,31 @@ void main()
             break; 
         }
         
-        prevPosition = newPosition;
-        
-        if (ray.radius > ESCAPE_R) 
-            break;
+        prevPos = newPos;
     }
 
     if (hitDisk) 
     {
-        double radius = length(vec3(ray.x, ray.y, ray.z)) / disk_r2;
-        vec3 diskColor = vec3(1.0, radius, 0.2);
-        color = vec4(diskColor, radius);
-    } 
-    else if (hitBlackHole) 
+        double r = length(vec3(ray.x, ray.y, ray.z)) / disk_r2;
+        vec3 diskColor = vec3(1.0, r, 0.2);
+        color = vec4(diskColor, r);
+
+    } else if (hitBlackHole)
         color = vec4(0.0, 0.0, 0.0, 1.0);
     else if (hitObject) 
     {
-        vec3 position = vec3(ray.x, ray.y, ray.z);
-        vec3 normal = normalize(position - hitCenter);
-        vec3 viewDirection = normalize(cam.camPos - position);
-        float ambient = 0.1;
-        float diffuse = max(dot(normal, viewDirection), 0.0);
-        float intensity = ambient + (1.0 - ambient) * diffuse;
-        vec3 shaded = objectColor.rgb * intensity;
+        vec3 P = vec3(ray.x, ray.y, ray.z);
+        vec3 N = normalize(P - hitCenter);
+        vec3 V = normalize(cam.camPos - P);
+
+        float ambient   = 0.1;
+        float diff      = max(dot(N, V), 0.0);
+        float intensity = ambient + (1.0 - ambient) * diff;
+        vec3  shaded    = objectColor.rgb * intensity;
+
         color = vec4(shaded, objectColor.a);
-    } 
-    else 
+    } else
         color = vec4(0.0);
 
-    imageStore(outImage, pixel, color);
+    imageStore(outImage, pix, color);
 }

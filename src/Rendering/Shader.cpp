@@ -6,40 +6,40 @@
 
 namespace Donut
 {
-    Ref<Shader> Shader::Create(const std::string& filepath) 
+    Shader* Shader::Create(const std::string& filepath) 
     {
         switch (Renderer::GetAPI())
         {
             case RendererAPI::API::OpenGL:
-                return CreateRef<OpenGLShader>(filepath);
+                return new OpenGLShader(filepath);
             case RendererAPI::API::Vulkan:
-                return CreateRef<VulkanShader>(filepath);
+                return new VulkanShader(filepath);
             default:
                 return nullptr;
         }
     }
 
-    Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+    Shader* Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
     {
         switch (Renderer::GetAPI()) 
         {
             case RendererAPI::API::OpenGL:
-                return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+                return new OpenGLShader(name, vertexSrc, fragmentSrc);
             case RendererAPI::API::Vulkan:
-                return CreateRef<VulkanShader>(name, vertexSrc, fragmentSrc);
+                return new VulkanShader(name, vertexSrc, fragmentSrc);
             default:
                 return nullptr;
         }
     }
 
-    Ref<Shader> Shader::CreateCompute(const std::string& name, const std::string& computeSrc)
+    Shader* Shader::CreateCompute(const std::string& name, const std::string& computeSrc)
     {
         switch (Renderer::GetAPI()) 
         {
             case RendererAPI::API::OpenGL:
-                return CreateRef<OpenGLShader>(name, computeSrc);
+                return new OpenGLShader(name, computeSrc);
             case RendererAPI::API::Vulkan:
-                return CreateRef<VulkanShader>(name, computeSrc);
+                return new VulkanShader(name, computeSrc);
             default:
                 return nullptr;
         }
@@ -58,14 +58,14 @@ namespace Donut
 
     Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
     {
-        auto shader = Shader::Create(filepath);
+        auto shader = Ref<Shader>(Shader::Create(filepath));
         Add(shader);
         return shader;
     }
 
     Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
     {
-        auto shader = Shader::Create(filepath);
+        auto shader = Ref<Shader>(Shader::Create(filepath));
         Add(name, shader);
         return shader;
     }

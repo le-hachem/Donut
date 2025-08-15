@@ -7,14 +7,14 @@
 
 namespace Donut 
 {
-    Ref<RendererAPI> RendererAPI::Create()
+    Scope<RendererAPI> RendererAPI::Create()
      {
         switch (s_API)
         {
             case API::OpenGL:
-                return CreateRef<OpenGLRendererAPI>();
+                return CreateScope<OpenGLRendererAPI>();
             case API::Vulkan:
-                return CreateRef<VulkanRendererAPI>();
+                return CreateScope<VulkanRendererAPI>();
             default:
                 return nullptr;
         }
@@ -50,7 +50,7 @@ namespace Donut
         RenderCommand::DrawIndexed(vertexArray);
     }
 
-    Ref<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
+    Scope<RendererAPI> RenderCommand::s_RendererAPI = RendererAPI::Create();
 
     void Renderer::SetClearColor(const glm::vec4& color)
     {

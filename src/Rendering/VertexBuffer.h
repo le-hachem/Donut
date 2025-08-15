@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Memory.h"
-
 #include <cstdint>
 #include <vector>
 
@@ -24,7 +22,7 @@ namespace Donut
         ~VertexBufferLayout() = default;
 
         template<typename T>
-        void Push(uint32_t count)
+        void Push(uint32_t count) 
         {
             static_assert(false);
         }
@@ -70,6 +68,6 @@ namespace Donut
         virtual const VertexBufferLayout& GetLayout()      const = 0;
         virtual void SetLayout(const VertexBufferLayout& layout) = 0;
 
-        static Ref<VertexBuffer> Create(const void* data, uint32_t size);
+        static VertexBuffer* Create(const void* data, uint32_t size);
     };
 };
