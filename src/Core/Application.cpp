@@ -7,6 +7,7 @@
 
 #include <GLFW/glfw3.h>
 
+
 namespace Donut
 {
     Application* Application::s_Instance = nullptr;
@@ -133,7 +134,14 @@ namespace Donut
         m_StateManager->Render();
         
         m_Window->BeginImGuiFrame();
+        SetupDockingLayout();
         m_StateManager->OnImUIRender();
         m_Window->EndImGuiFrame();
+    }
+    
+    void Application::SetupDockingLayout()
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::DockSpaceOverViewport(0, viewport, ImGuiDockNodeFlags_PassthruCentralNode);
     }
 };

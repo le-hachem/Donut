@@ -27,6 +27,7 @@ namespace Donut
         void OnUpdate();
         void OnRender();
         void OnEvent(Event& event);
+        void SetupDockingLayout();
     private:
         Scope<StateManager> m_StateManager;
         Scope<Window> m_Window;

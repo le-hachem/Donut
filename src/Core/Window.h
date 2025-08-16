@@ -46,7 +46,6 @@ namespace Donut
         void Shutdown();
 
         void SetupImGuiFonts();
-        void ApplyImGuiTheme();
         void ShutdownImGui();
         
         static void GLFWErrorCallback(int error, const char* description);
