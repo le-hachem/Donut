@@ -29,6 +29,7 @@ IncludeDir["glfw"] = "Vendor/glfw/include"
 IncludeDir["glad"] = "Vendor/glad/include"
 IncludeDir["imgui"] = "Vendor/imgui"
 IncludeDir["imgui_backends"] = "Vendor/imgui/backends"
+IncludeDir["toml11"] = "Vendor/toml11/include"
 
 group "Dependencies"
 
@@ -284,6 +285,7 @@ project "Donut"
 		"%{IncludeDir.glad}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.imgui_backends}",
+		"%{IncludeDir.toml11}",
 	}
 
     links

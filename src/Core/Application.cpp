@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include "Rendering/Renderer.h"
+#include "SettingsManager.h"
 
 #include "States/SimulationState.h"
 #include "States/ConfigState.h"
@@ -98,7 +99,14 @@ namespace Donut
     { 
         Logger::Init();
         
-        RendererAPI::SetAPI(RendererAPI::API::OpenGL);
+        // Initialize settings manager first
+        SettingsManager::Initialize();
+        
+        // Apply loaded settings
+        const auto& settings = SettingsManager::GetSettingsConst();
+        RendererAPI::API api = (settings.graphics.renderAPI == "Vulkan") ? RendererAPI::API::Vulkan : RendererAPI::API::OpenGL;
+        RendererAPI::SetAPI(api);
+        
         Renderer::Init();
         m_Window->InitImGui();
         
@@ -117,6 +125,7 @@ namespace Donut
             m_StateManager->Shutdown();
             
         Renderer::Shutdown();
+        SettingsManager::Shutdown();
         Logger::Shutdown();
     }
 

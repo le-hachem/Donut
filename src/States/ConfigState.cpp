@@ -2,6 +2,7 @@
 #include "Rendering/Renderer.h"
 #include "Core/Application.h"
 #include "Core/ThemeManager.h"
+#include "Core/SettingsManager.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -13,8 +14,22 @@ namespace Donut
     {
         DONUT_INFO("Entering Config State");
         
-        m_SelectedAPI   = Renderer::GetAPI();
-        m_SelectedTheme = static_cast<int>(ThemeManager::GetCurrentTheme());
+        const auto& settings = SettingsManager::GetSettingsConst();
+        
+        m_SelectedAPI   = (settings.graphics.renderAPI == "Vulkan") ? RendererAPI::API::Vulkan : RendererAPI::API::OpenGL;
+        m_SelectedTheme = (settings.graphics.selectedTheme == "Light") ? 1 : 
+                          (settings.graphics.selectedTheme == "Blue") ? 2 : 0;
+        m_TargetFPS     = settings.simulation.targetFPS;
+        m_ComputeHeight = settings.simulation.computeHeight;
+        m_MaxStepsMoving = settings.simulation.maxStepsMoving;
+        m_MaxStepsStatic = settings.simulation.maxStepsStatic;
+        m_EarlyExitDistance = settings.simulation.earlyExitDistance;
+        m_GravityEnabled = settings.simulation.gravityEnabled;
+        m_VSyncEnabled = settings.graphics.vSyncEnabled;
+        m_ShowFPS = settings.graphics.showFPS;
+        m_ShowPerformanceMetrics = settings.graphics.showPerformanceMetrics;
+        m_ShowDebugInfo = settings.graphics.showDebugInfo;
+        m_EnableAntiAliasing = settings.graphics.enableAntiAliasing;
     }
     
     void ConfigState::OnExit()
@@ -60,7 +75,7 @@ namespace Donut
         
         ImGui::Columns(2, "ConfigColumns", true);
         
-        float availableHeight = ImGui::GetWindowHeight() - 140; // Reserve space for header, separator, buttons, and footer
+        float availableHeight = ImGui::GetWindowHeight() - 140;
         
         ImGui::BeginChild("GraphicsSettings", ImVec2(0, availableHeight), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
         ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Graphics Settings");
@@ -200,7 +215,7 @@ namespace Donut
         ImGui::Separator();
         ImGui::Spacing();
 
-        float buttonWidth = (ImGui::GetWindowWidth() - 80) / 4.0f;
+        float buttonWidth = (ImGui::GetWindowWidth() - 100) / 5.0f;
         
         if (ImGui::Button("Start Simulation", ImVec2(buttonWidth, 35)))
         {
@@ -215,6 +230,13 @@ namespace Donut
         ImGui::SameLine();
         if (ImGui::Button("Apply Settings", ImVec2(buttonWidth, 35)))
             ApplySettings();
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Save Settings", ImVec2(buttonWidth, 35)))
+        {
+            ApplySettings();
+            DONUT_INFO("Settings saved manually");
+        }
         
         ImGui::SameLine();
         if (ImGui::Button("Exit", ImVec2(buttonWidth, 35)))
@@ -237,8 +259,29 @@ namespace Donut
     
     void ConfigState::ApplySettings()
     {
+        SimulationSettings simSettings;
+        simSettings.targetFPS = m_TargetFPS;
+        simSettings.computeHeight = m_ComputeHeight;
+        simSettings.maxStepsMoving = m_MaxStepsMoving;
+        simSettings.maxStepsStatic = m_MaxStepsStatic;
+        simSettings.earlyExitDistance = m_EarlyExitDistance;
+        simSettings.gravityEnabled = m_GravityEnabled;
+        
+        GraphicsSettings gfxSettings;
+        gfxSettings.renderAPI = (m_SelectedAPI == RendererAPI::API::Vulkan) ? "Vulkan" : "OpenGL";
+        gfxSettings.vSyncEnabled = m_VSyncEnabled;
+        gfxSettings.showFPS = m_ShowFPS;
+        gfxSettings.showPerformanceMetrics = m_ShowPerformanceMetrics;
+        gfxSettings.showDebugInfo = m_ShowDebugInfo;
+        gfxSettings.enableAntiAliasing = m_EnableAntiAliasing;
+        gfxSettings.selectedTheme = (m_SelectedTheme == 1) ? "Light" : 
+                                    (m_SelectedTheme == 2) ? "Blue"  : "Dark";
+        
+        SettingsManager::SetSimulationSettings(simSettings);
+        SettingsManager::SetGraphicsSettings(gfxSettings);
+        
         RendererAPI::SetAPI(m_SelectedAPI);
-        DONUT_INFO("Settings applied");
+        DONUT_INFO("Settings applied and saved");
     }
     
     void ConfigState::ResetToDefaults()
@@ -257,6 +300,7 @@ namespace Donut
         m_EnableAntiAliasing     = true;
         m_SelectedTheme          = 0;
         
-        DONUT_INFO("Settings reset to defaults");
+        ApplySettings();
+        DONUT_INFO("Settings reset to defaults and saved");
     }
 };

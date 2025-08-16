@@ -8,3 +8,6 @@
 	path = Vendor/imgui
 	url = https://github.com/ocornut/imgui.git
 	branch = docking
+[submodule "Vendor/toml11"]
+	path = Vendor/toml11
+	url = https://github.com/ToruNiina/toml11

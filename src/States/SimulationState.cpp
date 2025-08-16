@@ -3,6 +3,7 @@
 #include "Core/Application.h"
 #include "Core/Window.h"
 #include "Core/Event.h"
+#include "Core/SettingsManager.h"
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
@@ -12,6 +13,17 @@ namespace Donut
     void SimulationState::OnEnter()
     {
         DONUT_INFO("Entering Simulation State");
+        
+        const auto& settings = SettingsManager::GetSettingsConst();
+        
+        m_Engine.SetTargetFPS(settings.simulation.targetFPS);
+        m_Engine.SetComputeHeight(settings.simulation.computeHeight);
+        m_Engine.SetMaxStepsMoving(settings.simulation.maxStepsMoving);
+        m_Engine.SetMaxStepsStatic(settings.simulation.maxStepsStatic);
+        m_Engine.SetEarlyExitDistance(settings.simulation.earlyExitDistance);
+        m_Engine.GetGravity() = settings.simulation.gravityEnabled;
+        
+        m_Engine.UpdateComputeDimensions();
         m_Initialized = true;
     }
     
@@ -92,8 +104,22 @@ namespace Donut
         ImGui::Begin("Simulation Controls", nullptr, ImGuiWindowFlags_NoCollapse);
         
         ImGui::TextColored(ImVec4(0.8f, 0.8f, 1.0f, 1.0f), "Black Hole Simulation");
+        ImGui::SameLine();
         if (ImGui::Button("Back to Config"))
             Application::Get().GetStateManager().SwitchToState("Config");
+        ImGui::SameLine();
+        if (ImGui::Button("Save Settings"))
+        {
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.targetFPS = m_Engine.GetTargetFPS();
+            settings.computeHeight = m_Engine.GetComputeHeight();
+            settings.maxStepsMoving = m_Engine.GetMaxStepsMoving();
+            settings.maxStepsStatic = m_Engine.GetMaxStepsStatic();
+            settings.earlyExitDistance = m_Engine.GetEarlyExitDistance();
+            settings.gravityEnabled = m_Engine.GetGravity();
+            SettingsManager::SetSimulationSettings(settings);
+            DONUT_INFO("Simulation settings saved manually");
+        }
 
         ImGui::Separator();
         
@@ -106,7 +132,12 @@ namespace Donut
         
         int targetFPS = m_Engine.GetTargetFPS();
         if (ImGui::SliderInt("Target FPS", &targetFPS, 30, 120))
+        {
             m_Engine.SetTargetFPS(targetFPS);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.targetFPS = targetFPS;
+            SettingsManager::SetSimulationSettings(settings);
+        }
         
         ImGui::Spacing();
         
@@ -122,6 +153,9 @@ namespace Donut
         {
             m_Engine.SetComputeHeight(computeHeight);
             m_Engine.UpdateComputeDimensions();
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.computeHeight = computeHeight;
+            SettingsManager::SetSimulationSettings(settings);
         }
         
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Compute Width: %d (auto-calculated)", m_Engine.GetComputeWidth());
@@ -133,13 +167,28 @@ namespace Donut
         
         int maxStepsMoving = m_Engine.GetMaxStepsMoving();
         if (ImGui::SliderInt("Max Steps (Moving)", &maxStepsMoving, 1000, 60000))
+        {
             m_Engine.SetMaxStepsMoving(maxStepsMoving);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.maxStepsMoving = maxStepsMoving;
+            SettingsManager::SetSimulationSettings(settings);
+        }
         int maxStepsStatic = m_Engine.GetMaxStepsStatic();
         if (ImGui::SliderInt("Max Steps (Static)", &maxStepsStatic, 1000, 30000))
+        {
             m_Engine.SetMaxStepsStatic(maxStepsStatic);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.maxStepsStatic = maxStepsStatic;
+            SettingsManager::SetSimulationSettings(settings);
+        }
         float earlyExitDistance = m_Engine.GetEarlyExitDistance();
         if (ImGui::SliderFloat("Early Exit Distance", &earlyExitDistance, 1e11f, 1e13f, "%.2e"))
+        {
             m_Engine.SetEarlyExitDistance(earlyExitDistance);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.earlyExitDistance = earlyExitDistance;
+            SettingsManager::SetSimulationSettings(settings);
+        }
         
         ImGui::Spacing();
         
@@ -147,7 +196,12 @@ namespace Donut
         ImGui::Separator();
         
         bool& gravity = m_Engine.GetGravity();
-        ImGui::Checkbox("Gravity Enabled", &gravity);
+        if (ImGui::Checkbox("Gravity Enabled", &gravity))
+        {
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.gravityEnabled = gravity;
+            SettingsManager::SetSimulationSettings(settings);
+        }
         
         ImGui::Spacing();
         

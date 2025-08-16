@@ -1,0 +1,17 @@
+[simulation]
+max_steps_static = 15000
+max_steps_moving = 30000
+compute_height = 256
+target_fps = 60
+early_exit_distance = 5e+12
+gravity_enabled = true
+
+[graphics]
+render_api = "OpenGL"
+vsync_enabled = true
+enable_anti_aliasing = true
+show_fps = true
+show_performance_metrics = true
+show_debug_info = false
+selected_theme = "Dark"
+
