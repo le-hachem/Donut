@@ -1,4 +1,4 @@
-# 𝔇𝔬𝔫𝔲𝔱 - Black Hole Ray Tracer Documentation
+# 𝔇𝔬𝔫𝔲𝔱
 
 A real-time black hole ray tracer that simulates the visual effects of gravitational lensing around Sagittarius A* (Sgr A*).
 
