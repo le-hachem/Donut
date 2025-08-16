@@ -155,7 +155,7 @@ namespace Donut
 
     std::string SettingsManager::GetSettingsFilePath()
     {
-        return "Config/settings.toml";
+        return "config/settings.toml";
     }
 
     void SettingsManager::LoadDefaultSettings()

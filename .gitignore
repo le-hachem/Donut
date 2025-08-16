@@ -1,4 +1,6 @@
 logs/
+config/
+
 *.log
 imgui.ini
 
