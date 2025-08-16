@@ -124,6 +124,19 @@ namespace Donut
         
         ImGui::Separator();
         
+        ImGui::Text("Simulation Quality:");
+        int maxStepsMoving = m_Engine.GetMaxStepsMoving();
+        if (ImGui::SliderInt("Max Steps (Moving)", &maxStepsMoving, 1000, 60000))
+            m_Engine.SetMaxStepsMoving(maxStepsMoving);
+        int maxStepsStatic = m_Engine.GetMaxStepsStatic();
+        if (ImGui::SliderInt("Max Steps (Static)", &maxStepsStatic, 1000, 30000))
+            m_Engine.SetMaxStepsStatic(maxStepsStatic);
+        float earlyExitDistance = m_Engine.GetEarlyExitDistance();
+        if (ImGui::SliderFloat("Early Exit Distance", &earlyExitDistance, 1e11f, 1e13f, "%.2e"))
+            m_Engine.SetEarlyExitDistance(earlyExitDistance);
+        
+        ImGui::Separator();
+        
         ImGui::Text("Controls:");
         ImGui::Text("Left Mouse: Orbit camera");
         ImGui::Text("Scroll: Zoom in/out");

@@ -73,6 +73,7 @@ namespace Donut
         void UploadCameraUBO(const Camera& cam);
         void UploadObjectsUBO(const std::vector<ObjectData>& objs);
         void UploadDiskUBO();
+        void UploadSimulationUBO();
         void RenderScene();
         void UpdatePhysics(float deltaTime);
         void UpdateWindowDimensions();
@@ -93,6 +94,14 @@ namespace Donut
         int   GetComputeHeight()     const { return m_ComputeHeight;                        }
         int   GetComputeWidth()      const { return (m_Width * m_ComputeHeight) / m_Height; }
         void  UpdateComputeDimensions();
+        
+        // Simulation parameters
+        int   GetMaxStepsMoving()    const { return m_MaxStepsMoving; }
+        int   GetMaxStepsStatic()    const { return m_MaxStepsStatic; }
+        float GetEarlyExitDistance() const { return m_EarlyExitDistance; }
+        void  SetMaxStepsMoving(int steps) { m_MaxStepsMoving = steps; }
+        void  SetMaxStepsStatic(int steps) { m_MaxStepsStatic = steps; }
+        void  SetEarlyExitDistance(float distance) { m_EarlyExitDistance = distance; }
     private:
         Ref<Shader> CreateComputeProgram(const char* path);
         std::pair<Ref<VertexArray>, Ref<Texture2D>> QuadVAO();
@@ -104,6 +113,7 @@ namespace Donut
         Ref<UniformBuffer> m_CameraUBO;
         Ref<UniformBuffer> m_DiskUBO;
         Ref<UniformBuffer> m_ObjectsUBO;
+        Ref<UniformBuffer> m_SimulationUBO;
 
         int   m_Width;
         int   m_Height;
@@ -113,11 +123,15 @@ namespace Donut
         int   m_TargetFPS     = 60;
         float m_CurrentFPS    = 60.0f;
         float m_LastFrameTime = 0.0f;
-        int   m_ComputeHeight = 320;
+        int   m_ComputeHeight = 150;
 
         std::vector<ObjectData> m_Objects;
         BlackHole               m_SagA;
         Camera                  m_Camera;
         bool                    m_Gravity = false;
+        
+        int   m_MaxStepsMoving = 60000;
+        int   m_MaxStepsStatic = 30000;
+        float m_EarlyExitDistance = 5e11f;
     };
 };

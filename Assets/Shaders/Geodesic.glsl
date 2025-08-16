@@ -30,13 +30,25 @@ layout(std140, binding = 3) uniform Objects
     float  mass[16]; 
 };
 
+layout(std140, binding = 4) uniform Simulation 
+{
+    int   maxStepsMoving;
+    int   maxStepsStatic;
+    float earlyExitDistance;
+    int   _pad0;
+};
+
 const float  SagA_rs  = 1.269e10;
 const float  D_LAMBDA = 1e7;
 const double ESCAPE_R = 1e30;
 
-const int   MAX_STEPS_MOVING   = 60000;
-const int   MAX_STEPS_STATIC   = 30000;
-const float EARLY_EXIT_DISTANCE = 5e11;
+const int   DEFAULT_MAX_STEPS_MOVING   = 12000;
+const int   DEFAULT_MAX_STEPS_STATIC   = 8000;
+const float DEFAULT_EARLY_EXIT_DISTANCE = 2e12;
+
+const float MIN_STEP_SIZE = 1e6;
+const float MAX_STEP_SIZE = 5e7;
+const float STEP_ADAPTATION_FACTOR = 1.5;
 
 vec4 objectColor = vec4(0.0);
 vec3 hitCenter = vec3(0.0);
@@ -99,8 +111,12 @@ bool InterceptObject(Ray ray)
     {
         vec3  center = objPosRadius[i].xyz;
         float radius = objPosRadius[i].w;
+        
+        float distSq = dot(P - center, P - center);
+        if (distSq > radius * radius * 4.0) 
+            continue;
 
-        if (distance(P, center) <= radius)
+        if (distSq <= radius * radius)
         {
             objectColor = objColor[i];
             hitCenter = center;
@@ -154,6 +170,15 @@ bool CrossesEquatorialPlane(vec3 oldPos, vec3 newPos)
     return crossed && (r >= disk_r1 && r <= disk_r2);
 }
 
+float CalculateAdaptiveStepSize(Ray ray, float baseStepSize) 
+{
+    float r_factor         = clamp(ray.r / (SagA_rs * 10.0), 0.1, 1.0);
+    float curvature        = length(vec3(ray.dr, ray.dtheta * ray.r, ray.dphi * ray.r * sin(ray.theta)));
+    float curvature_factor = clamp(1e12 / (curvature + 1e6), 0.1, 2.0);
+    
+    return clamp(baseStepSize * r_factor * curvature_factor, MIN_STEP_SIZE, MAX_STEP_SIZE);
+}
+
 void main() 
 {
     ivec2 pix  = ivec2(gl_GlobalInvocationID.xy);
@@ -181,17 +206,29 @@ void main()
     bool hitDisk      = false;
     bool hitObject    = false;
 
-    int maxSteps = cam.moving ? MAX_STEPS_MOVING : MAX_STEPS_STATIC;
+    int maxSteps = cam.moving ? maxStepsMoving : maxStepsStatic;
+    
+    if (maxSteps <= 0)
+        maxSteps = cam.moving ? DEFAULT_MAX_STEPS_MOVING : DEFAULT_MAX_STEPS_STATIC;
     
     float cameraDistance = length(cam.camPos);
-    if (cameraDistance > 1e12)
-        maxSteps = maxSteps / 4;
-    else if (cameraDistance > 5e11)
+    if (cameraDistance > 2e12)
         maxSteps = maxSteps / 2;
+    else if (cameraDistance > 1e12)
+        maxSteps = int(maxSteps * 0.75);
+
+    float initialEscapeVelocity = sqrt(2.0 * SagA_rs / ray.r);
+    if (ray.dr > initialEscapeVelocity * 0.95 && 
+        ray.r  > SagA_rs * 200.0)
+        maxSteps = maxSteps / 2;
+
+    float currentStepSize = D_LAMBDA;
+    int objectCheckInterval = 5;
 
     for (int i = 0; i < maxSteps; ++i) 
     {
-        if (ray.r > EARLY_EXIT_DISTANCE) 
+        float exitDistance = earlyExitDistance > 0.0 ? earlyExitDistance : DEFAULT_EARLY_EXIT_DISTANCE;
+        if (ray.r > exitDistance) 
             break;
         if (ray.r > ESCAPE_R) 
             break;
@@ -202,8 +239,10 @@ void main()
             break; 
         }
         
-        RK4Step(ray, D_LAMBDA);
-        lambda += D_LAMBDA;
+        currentStepSize = CalculateAdaptiveStepSize(ray, D_LAMBDA);
+        
+        RK4Step(ray, currentStepSize);
+        lambda += currentStepSize;
 
         vec3 newPos = vec3(ray.x, ray.y, ray.z);
         
@@ -213,13 +252,16 @@ void main()
             break; 
         }
         
-        if (InterceptObject(ray)) 
+        if (i % objectCheckInterval == 0 && InterceptObject(ray)) 
         { 
             hitObject = true; 
             break; 
         }
         
         prevPos = newPos;
+        
+        if (ray.dr > 0.0 && ray.r > SagA_rs * 100.0 && lambda > 2e8)
+            break;
     }
 
     if (hitDisk) 

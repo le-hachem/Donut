@@ -39,6 +39,8 @@ namespace Donut
             + 16 * (sizeof(glm::vec4) + sizeof(glm::vec4))
             + 16 * sizeof(float);
         m_ObjectsUBO = UniformBuffer::Create(objUBOSize, 3);
+        
+        m_SimulationUBO = UniformBuffer::Create(sizeof(int) * 2 + sizeof(float) * 2, 4);
 
         auto result = QuadVAO();
         m_QuadVAO = result.first;
@@ -97,6 +99,7 @@ namespace Donut
         UploadCameraUBO(cam);
         UploadDiskUBO();
         UploadObjectsUBO(m_Objects);
+        UploadSimulationUBO();
         m_Texture->BindAsImage(0, false);
 
         uint32_t groupsX = static_cast<uint32_t>(std::ceil(cw / 16.0f));
@@ -171,6 +174,25 @@ namespace Donut
 
         m_DiskUBO->SetData(diskData, sizeof(diskData));
         m_DiskUBO->Bind(2);
+    }
+
+    void Engine::UploadSimulationUBO()
+    {
+        struct UBOData
+        {
+            int maxStepsMoving;
+            int maxStepsStatic;
+            float earlyExitDistance;
+            int padding;
+        } data;
+
+        data.maxStepsMoving    = m_MaxStepsMoving;
+        data.maxStepsStatic    = m_MaxStepsStatic;
+        data.earlyExitDistance = m_EarlyExitDistance;
+        data.padding           = 0;
+
+        m_SimulationUBO->SetData(&data, sizeof(data));
+        m_SimulationUBO->Bind(4);
     }
 
     void Engine::UpdatePhysics(float deltaTime)
