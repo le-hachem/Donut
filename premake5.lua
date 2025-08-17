@@ -29,6 +29,7 @@ IncludeDir["glfw"] = "Vendor/glfw/include"
 IncludeDir["glad"] = "Vendor/glad/include"
 IncludeDir["imgui"] = "Vendor/imgui"
 IncludeDir["imgui_backends"] = "Vendor/imgui/backends"
+IncludeDir["imguizmo"] = "Vendor/ImGuizmo"
 IncludeDir["toml11"] = "Vendor/toml11/include"
 
 group "Dependencies"
@@ -244,6 +245,49 @@ project "ImGui"
 		runtime "Release"
 		optimize "on"
 		symbols "off"
+
+project "ImGuizmo"
+	kind "StaticLib"
+	language "C++"
+	staticruntime "on"
+	
+	targetdir ("bin/" .. outputdir)
+	objdir ("bin-int/" .. outputdir)
+	
+	files
+	{
+		"Vendor/ImGuizmo/ImGuizmo.cpp",
+		"Vendor/ImGuizmo/ImGuizmo.h"
+	}
+	
+	includedirs
+	{
+		"%{IncludeDir.imgui}",
+		"%{IncludeDir.imguizmo}"
+	}
+	
+	filter "system:windows"
+		systemversion "latest"
+		cppdialect "C++17"
+	
+	filter "system:linux"
+		pic "On"
+		systemversion "latest"
+		cppdialect "C++17"
+	
+	filter "configurations:Debug"
+		runtime "Debug"
+		symbols "on"
+	
+	filter "configurations:Release"
+		runtime "Release"
+		optimize "on"
+	
+	filter "configurations:Dist"
+		runtime "Release"
+		optimize "on"
+		symbols "off"
+
 group ""
 
 project "Donut"
@@ -285,6 +329,7 @@ project "Donut"
 		"%{IncludeDir.glad}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.imgui_backends}",
+		"%{IncludeDir.imguizmo}",
 		"%{IncludeDir.toml11}",
 	}
 
@@ -292,7 +337,8 @@ project "Donut"
     {
         "GLFW",
         "GLAD",
-        "ImGui"
+        "ImGui",
+        "ImGuizmo"
     }
 
 	filter "system:windows"

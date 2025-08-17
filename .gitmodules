@@ -11,3 +11,6 @@
 [submodule "Vendor/toml11"]
 	path = Vendor/toml11
 	url = https://github.com/ToruNiina/toml11
+[submodule "Vendor/ImGuizmo"]
+	path = Vendor/ImGuizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git

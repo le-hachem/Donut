@@ -5,9 +5,10 @@
 
 #include "States/SimulationState.h"
 #include "States/ConfigState.h"
+#include "States/WorldBuilderState.h"
 
 #include <GLFW/glfw3.h>
-
+#include <ImGuizmo.h>
 
 namespace Donut
 {
@@ -88,6 +89,12 @@ namespace Donut
                 event.Handled = true;
                 return true;
             }
+            else if (e.GetKeyCode() == GLFW_KEY_3)
+            {
+                m_StateManager->SwitchToState("WorldBuilder");
+                event.Handled = true;
+                return true;
+            }
             
             return true;
         });
@@ -99,10 +106,8 @@ namespace Donut
     { 
         Logger::Init();
         
-        // Initialize settings manager first
         SettingsManager::Initialize();
         
-        // Apply loaded settings
         const auto& settings = SettingsManager::GetSettingsConst();
         RendererAPI::API api = (settings.graphics.renderAPI == "Vulkan") ? RendererAPI::API::Vulkan : RendererAPI::API::OpenGL;
         RendererAPI::SetAPI(api);
@@ -114,8 +119,9 @@ namespace Donut
         RenderCommand::SetFaceCulling(false);
 
         m_StateManager = CreateScope<StateManager>();
-        m_StateManager->RegisterState("Config",     CreateScope<ConfigState>());
-        m_StateManager->RegisterState("Simulation", CreateScope<SimulationState>());
+        m_StateManager->RegisterState("Config",       CreateScope<ConfigState>());
+        m_StateManager->RegisterState("Simulation",   CreateScope<SimulationState>());
+        m_StateManager->RegisterState("WorldBuilder", CreateScope<WorldBuilderState>());
         m_StateManager->SwitchToState("Config");
     }
 
@@ -141,8 +147,11 @@ namespace Donut
     void Application::OnRender()
     {
         m_StateManager->Render();
-        
         m_Window->BeginImGuiFrame();
+        
+        ImGuizmo::BeginFrame();
+        ImGuizmo::SetOrthographic(false);
+        
         SetupDockingLayout();
         m_StateManager->OnImUIRender();
         m_Window->EndImGuiFrame();

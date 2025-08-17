@@ -138,7 +138,9 @@ namespace Donut
             DONUT_INFO("Settings saved to {}", filePath);
         }
         catch (const std::exception& e)
+        {
             DONUT_ERROR("Failed to save settings: {}", e.what());
+        }
     }
 
     void SettingsManager::SetSimulationSettings(const SimulationSettings& settings)

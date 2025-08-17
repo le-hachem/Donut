@@ -16,20 +16,20 @@ namespace Donut
         
         const auto& settings = SettingsManager::GetSettingsConst();
         
-        m_SelectedAPI   = (settings.graphics.renderAPI == "Vulkan") ? RendererAPI::API::Vulkan : RendererAPI::API::OpenGL;
-        m_SelectedTheme = (settings.graphics.selectedTheme == "Light") ? 1 : 
-                          (settings.graphics.selectedTheme == "Blue") ? 2 : 0;
-        m_TargetFPS     = settings.simulation.targetFPS;
-        m_ComputeHeight = settings.simulation.computeHeight;
-        m_MaxStepsMoving = settings.simulation.maxStepsMoving;
-        m_MaxStepsStatic = settings.simulation.maxStepsStatic;
-        m_EarlyExitDistance = settings.simulation.earlyExitDistance;
-        m_GravityEnabled = settings.simulation.gravityEnabled;
-        m_VSyncEnabled = settings.graphics.vSyncEnabled;
-        m_ShowFPS = settings.graphics.showFPS;
+        m_SelectedAPI            = (settings.graphics.renderAPI == "Vulkan") ? RendererAPI::API::Vulkan : RendererAPI::API::OpenGL;
+        m_SelectedTheme          = (settings.graphics.selectedTheme == "Light") ? 1 : 
+                                   (settings.graphics.selectedTheme == "Blue") ? 2 : 0;
+        m_TargetFPS              = settings.simulation.targetFPS;
+        m_ComputeHeight          = settings.simulation.computeHeight;
+        m_MaxStepsMoving         = settings.simulation.maxStepsMoving;
+        m_MaxStepsStatic         = settings.simulation.maxStepsStatic;
+        m_EarlyExitDistance      = settings.simulation.earlyExitDistance;
+        m_GravityEnabled         = settings.simulation.gravityEnabled;
+        m_VSyncEnabled           = settings.graphics.vSyncEnabled;
+        m_ShowFPS                = settings.graphics.showFPS;
         m_ShowPerformanceMetrics = settings.graphics.showPerformanceMetrics;
-        m_ShowDebugInfo = settings.graphics.showDebugInfo;
-        m_EnableAntiAliasing = settings.graphics.enableAntiAliasing;
+        m_ShowDebugInfo          = settings.graphics.showDebugInfo;
+        m_EnableAntiAliasing     = settings.graphics.enableAntiAliasing;
     }
     
     void ConfigState::OnExit()
@@ -52,7 +52,7 @@ namespace Donut
     
     void ConfigState::OnRender()
     {
-        Renderer::SetClearColor({ 0.05f, 0.05f, 0.1f, 1.0f });
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1.0f });
         Renderer::Clear();
     }
     
@@ -104,6 +104,7 @@ namespace Donut
                 if (isSelected)
                     ImGui::SetItemDefaultFocus();
             }
+            
             ImGui::EndCombo();
         }
         
@@ -215,12 +216,19 @@ namespace Donut
         ImGui::Separator();
         ImGui::Spacing();
 
-        float buttonWidth = (ImGui::GetWindowWidth() - 100) / 5.0f;
+        float buttonWidth = (ImGui::GetWindowWidth() - 120) / 6.0f;
         
         if (ImGui::Button("Start Simulation", ImVec2(buttonWidth, 35)))
         {
             ApplySettings();
             Application::Get().GetStateManager().SwitchToState("Simulation");
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("World Builder", ImVec2(buttonWidth, 35)))
+        {
+            ApplySettings();
+            Application::Get().GetStateManager().SwitchToState("WorldBuilder");
         }
         
         ImGui::SameLine();
