@@ -17,12 +17,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <numbers>
 #include <fstream>
 #include <sstream>
 #include <limits>
-
-// TODO(Hachem): JSON Scene saving and loading
 
 namespace Donut
 {
@@ -42,18 +42,7 @@ namespace Donut
         m_Camera.SetElevation(static_cast<float>(std::numbers::pi) / 3.0f);
         m_Camera.UpdateOrbital();
         
-        Material defaultMaterial(glm::vec3(0.8f, 0.2f, 0.2f), 0.5f, 0.0f);
-        Object sphere1(glm::vec3(-3.0f, 0.0f, 0.0f), 1.0f, defaultMaterial);
-        m_Scene.objs.push_back(sphere1);
-        
-        Material material2(glm::vec3(0.2f, 0.8f, 0.2f), 0.3f, 0.0f);
-        Object sphere2(glm::vec3(3.0f, 0.0f, 0.0f), 1.5f, material2);
-        m_Scene.objs.push_back(sphere2);
-        
-        Material material3(glm::vec3(0.2f, 0.2f, 0.8f), 0.7f, 0.0f);
-        Object sphere3(glm::vec3(0.0f, 2.0f, 0.0f), 0.8f, material3);
-        m_Scene.objs.push_back(sphere3);
-        
+        // Initialize rendering resources once
         m_SphereShader = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
         InitializeSphereGeometry();
         
@@ -516,20 +505,38 @@ namespace Donut
     
     void WorldBuilderState::SaveScene()
     {
-        std::ofstream file("scene.txt");
+        nlohmann::json sceneData;
+        sceneData["objects"] = nlohmann::json::array();
 
+        for (const auto& obj : m_Scene.objs)
+        {
+            nlohmann::json sphereData;
+            sphereData["position"] = 
+            { 
+                obj.m_Centre.x, 
+                obj.m_Centre.y, 
+                obj.m_Centre.z 
+            };
+
+            sphereData["color"] = 
+            {
+                obj.m_Material.m_Color.x, 
+                obj.m_Material.m_Color.y, 
+                obj.m_Material.m_Color.z
+            };
+
+            sphereData["radius"]  = obj.m_Radius;
+            sphereData["specular"] = obj.m_Material.m_Specular;
+            sphereData["emission"] = obj.m_Material.m_Emission;
+            sceneData["objects"].push_back(sphereData);
+        }
+
+        std::ofstream file("Scene.json");
         if (file.is_open())
         {
-            file << m_Scene.objs.size() << std::endl;
-            for (const auto& obj : m_Scene.objs)
-            {
-                file << obj.m_Centre.x << " " << obj.m_Centre.y << " " << obj.m_Centre.z << " ";
-                file << obj.m_Radius << " ";
-                file << obj.m_Material.m_Color.x << " " << obj.m_Material.m_Color.y << " " << obj.m_Material.m_Color.z << " ";
-                file << obj.m_Material.m_Specular << " " << obj.m_Material.m_Emission << std::endl;
-            }
+            file << sceneData.dump(4);
             file.close();
-            DONUT_INFO("Scene saved to scene.txt");
+            DONUT_INFO("Scene saved to Scene.json");
         }
         else
             DONUT_ERROR("Failed to save scene");
@@ -537,34 +544,47 @@ namespace Donut
     
     void WorldBuilderState::LoadScene()
     {
-        std::ifstream file("scene.txt");
+        std::ifstream file("Scene.json");
         if (file.is_open())
         {
             m_Scene.objs.clear();
             m_SelectedObjectIndex = -1;
             
-            size_t objectCount;
-            file >> objectCount;
-            
-            for (size_t i = 0; i < objectCount; ++i)
+            nlohmann::json sceneData;
+            file >> sceneData;
+
+            if (sceneData.contains("objects"))
             {
-                glm::vec3 position;
-                float radius;
-                glm::vec3 color;
-                float specular, emission;
-                
-                file >> position.x >> position.y >> position.z;
-                file >> radius;
-                file >> color.x >> color.y >> color.z;
-                file >> specular >> emission;
-                
-                Material material(color, specular, emission);
-                Object   sphere(position, radius, material);
-                m_Scene.objs.push_back(sphere);
+                for (const auto& sphereData : sceneData["objects"])
+                {
+                    glm::vec3 position;
+                    glm::vec3 color;
+                    float radius;
+                    float specular;
+                    float emission;
+                    
+                    auto posArray = sphereData["position"];
+                    position.x = posArray[0].get<float>();
+                    position.y = posArray[1].get<float>();
+                    position.z = posArray[2].get<float>();
+                    
+                    auto colorArray = sphereData["color"];
+                    color.x = colorArray[0].get<float>();
+                    color.y = colorArray[1].get<float>();
+                    color.z = colorArray[2].get<float>();
+                    
+                    radius   = sphereData["radius"].get<float>();
+                    specular = sphereData["specular"].get<float>();
+                    emission = sphereData["emission"].get<float>();
+                    
+                    Material material(color, specular, emission);
+                    Object   sphere(position, radius, material);
+                    m_Scene.objs.push_back(sphere);
+                }
             }
             
             file.close();
-            DONUT_INFO("Scene loaded from scene.txt");
+            DONUT_INFO("Scene loaded from Scene.json");
         }
         else
             DONUT_ERROR("Failed to load scene");

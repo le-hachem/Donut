@@ -3,6 +3,7 @@ config/
 
 *.log
 imgui.ini
+Scene.json
 
 bin/
 bin-int/

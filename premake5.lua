@@ -24,13 +24,14 @@ workspace "Donut"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}/%{prj.name}"
 
 IncludeDir = {}
-IncludeDir["glm"]  = "Vendor/glm"
-IncludeDir["glfw"] = "Vendor/glfw/include"
-IncludeDir["glad"] = "Vendor/glad/include"
-IncludeDir["imgui"] = "Vendor/imgui"
+IncludeDir["glm"]            = "Vendor/glm"
+IncludeDir["glfw"]           = "Vendor/glfw/include"
+IncludeDir["glad"]           = "Vendor/glad/include"
+IncludeDir["imgui"]          = "Vendor/imgui"
 IncludeDir["imgui_backends"] = "Vendor/imgui/backends"
-IncludeDir["imguizmo"] = "Vendor/ImGuizmo"
-IncludeDir["toml11"] = "Vendor/toml11/include"
+IncludeDir["imguizmo"]       = "Vendor/ImGuizmo"
+IncludeDir["toml11"]         = "Vendor/toml11/include"
+IncludeDir["nlohmann"]       = "Vendor/json/single_include"
 
 group "Dependencies"
 
@@ -331,6 +332,7 @@ project "Donut"
 		"%{IncludeDir.imgui_backends}",
 		"%{IncludeDir.imguizmo}",
 		"%{IncludeDir.toml11}",
+		"%{IncludeDir.nlohmann}",
 	}
 
     links
