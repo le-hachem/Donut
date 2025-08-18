@@ -17,17 +17,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <numbers>
 #include <fstream>
 #include <sstream>
 #include <limits>
 
-#define _USE_MATH_DEFINES
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-// TODO(Hachem): Remove constant shader and object creation in main loop
-// TODO(Hachem): Change selection appearance
 // TODO(Hachem): JSON Scene saving and loading
 
 namespace Donut
@@ -45,7 +39,7 @@ namespace Donut
         m_Camera.SetOrbitalSpeed(0.01f);
         m_Camera.SetZoomSpeed(2.0f);
         m_Camera.SetAzimuth(0.0f);
-        m_Camera.SetElevation(static_cast<float>(M_PI) / 3.0f);
+        m_Camera.SetElevation(static_cast<float>(std::numbers::pi) / 3.0f);
         m_Camera.UpdateOrbital();
         
         Material defaultMaterial(glm::vec3(0.8f, 0.2f, 0.2f), 0.5f, 0.0f);
@@ -59,6 +53,9 @@ namespace Donut
         Material material3(glm::vec3(0.2f, 0.2f, 0.8f), 0.7f, 0.0f);
         Object sphere3(glm::vec3(0.0f, 2.0f, 0.0f), 0.8f, material3);
         m_Scene.objs.push_back(sphere3);
+        
+        m_SphereShader = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
+        InitializeSphereGeometry();
         
         m_Initialized = true;
     }
@@ -87,7 +84,7 @@ namespace Donut
             float newAzimuth   = m_Camera.GetAzimuth() + azimuthDelta;
             float newElevation = m_Camera.GetElevation() + elevationDelta;
             
-            newElevation = glm::clamp(newElevation, 0.01f, static_cast<float>(M_PI) - 0.01f);
+            newElevation = glm::clamp(newElevation, 0.01f, static_cast<float>(std::numbers::pi) - 0.01f);
             
             m_Camera.SetAzimuth(newAzimuth);
             m_Camera.SetElevation(newElevation);
@@ -99,7 +96,7 @@ namespace Donut
     
     void WorldBuilderState::OnRender()
     {
-        RenderCommand::SetClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
+        RenderCommand::SetClearColor(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
         RenderCommand::Clear();
         RenderScene();
     }
@@ -123,8 +120,8 @@ namespace Donut
                 int width, height;
                 glfwGetFramebufferSize(window, &width, &height);
                 
-                float ndcX = (2.0f * xpos) / width - 1.0f;
-                float ndcY = 1.0f - (2.0f * ypos) / height;
+                float ndcX = (2.0f * static_cast<float>(xpos)) / static_cast<float>(width) - 1.0f;
+                float ndcY = 1.0f - (2.0f * static_cast<float>(ypos)) / static_cast<float>(height);
                 
                 glm::vec4 rayStart_NDC(ndcX, ndcY, -1.0f, 1.0f);
                 glm::vec4 rayEnd_NDC(ndcX, ndcY, 0.0f, 1.0f);
@@ -178,8 +175,9 @@ namespace Donut
                 }
                 else
                 {
-                    m_CameraDragging = true;
-                    m_LastMousePos = glm::vec2(xpos, ypos);
+                    m_SelectedObjectIndex = -1;
+                    m_CameraDragging      = true;
+                    m_LastMousePos        = glm::vec2(xpos, ypos);
                 }
                 
                 return true;
@@ -292,7 +290,7 @@ namespace Donut
             {
                 m_Camera.SetOrbitalRadius(15.0f);
                 m_Camera.SetAzimuth(0.0f);
-                m_Camera.SetElevation(static_cast<float>(M_PI) / 3.0f);
+                m_Camera.SetElevation(static_cast<float>(std::numbers::pi) / 3.0f);
                 m_Camera.SetOrbitalTarget(glm::vec3(0.0f, 0.0f, 0.0f));
                 m_Camera.UpdateOrbital();
             }
@@ -381,6 +379,8 @@ namespace Donut
                 }
             }
         }
+
+        ImGui::Spacing();
          
         if (ImGui::CollapsingHeader("Gizmo Controls", &m_ShowGizmoControls))
         {
@@ -398,6 +398,22 @@ namespace Donut
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Hotkeys:");
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "W = Translate, E = Rotate, R = Scale");
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("Selection Outline", &m_ShowOutlineControls))
+        {
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Outline Settings:");
+
+            ImGui::Text("Outline Color:");
+            ImGui::ColorEdit3("##OutlineColor", &m_OutlineColor.x);
+
+            ImGui::Text("Outline Width:");
+            ImGui::SliderFloat("##OutlineWidth", &m_OutlineWidth, 0.01f, 0.9f, "%.2f");
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "White rim around sphere silhouette");
         }
         
         ImGui::Spacing();
@@ -554,6 +570,73 @@ namespace Donut
             DONUT_ERROR("Failed to load scene");
     }
     
+    void WorldBuilderState::InitializeSphereGeometry()
+    {
+        std::vector<float> vertices;
+        std::vector<uint32_t> indices;
+        
+        const int segments = 32;
+        const int rings = 16;
+        
+        for (int ring = 0; ring <= rings; ++ring)
+        {
+            float phi = static_cast<float>(std::numbers::pi) * ring / rings;
+            float sinPhi = sin(phi);
+            float cosPhi = cos(phi);
+            
+            for (int segment = 0; segment <= segments; ++segment)
+            {
+                float theta = 2.0f * static_cast<float>(std::numbers::pi) * segment / segments;
+                float sinTheta = sin(theta);
+                float cosTheta = cos(theta);
+                
+                float x = cosTheta * sinPhi;
+                float y = cosPhi;
+                float z = sinTheta * sinPhi;
+                
+                float nx = x;
+                float ny = y;
+                float nz = z;
+                
+                vertices.push_back(x);
+                vertices.push_back(y);
+                vertices.push_back(z);
+                vertices.push_back(nx);
+                vertices.push_back(ny);
+                vertices.push_back(nz);
+            }
+        }
+        
+        for (int ring = 0; ring < rings; ++ring)
+        {
+            for (int segment = 0; segment < segments; ++segment)
+            {
+                uint32_t first = ring * (segments + 1) + segment;
+                uint32_t second = first + segments + 1;
+                
+                indices.push_back(first);
+                indices.push_back(second);
+                indices.push_back(first + 1);
+                
+                indices.push_back(second);
+                indices.push_back(second + 1);
+                indices.push_back(first + 1);
+            }
+        }
+        
+        auto vertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(float))));
+        VertexBufferLayout layout;
+        layout.Push<float>(3);
+        layout.Push<float>(3);
+        vertexBuffer->SetLayout(layout);
+        
+        auto indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices.data(), static_cast<uint32_t>(indices.size())));
+        
+        m_SphereVAO = Ref<VertexArray>(VertexArray::Create());
+        m_SphereVAO->AddVertexBuffer(vertexBuffer);
+        m_SphereVAO->SetIndexBuffer(indexBuffer);
+    }
+    
     void WorldBuilderState::RenderScene()
     {
         GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
@@ -563,76 +646,6 @@ namespace Donut
         RenderCommand::SetViewport(0, 0, width, height);
         RenderCommand::EnableDepthTest();
         
-        static Ref<VertexArray> sphereVAO = nullptr;
-        static Ref<Shader> sphereShader   = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
-        
-        if (!sphereVAO)
-        {
-            std::vector<float> vertices;
-            std::vector<uint32_t> indices;
-            
-            const int segments = 32;
-            const int rings = 16;
-            
-            for (int ring = 0; ring <= rings; ++ring)
-            {
-                float phi = static_cast<float>(M_PI) * ring / rings;
-                float sinPhi = sin(phi);
-                float cosPhi = cos(phi);
-                
-                for (int segment = 0; segment <= segments; ++segment)
-                {
-                    float theta = 2.0f * static_cast<float>(M_PI) * segment / segments;
-                    float sinTheta = sin(theta);
-                    float cosTheta = cos(theta);
-                    
-                    float x = cosTheta * sinPhi;
-                    float y = cosPhi;
-                    float z = sinTheta * sinPhi;
-                    
-                    float nx = x;
-                    float ny = y;
-                    float nz = z;
-                    
-                    vertices.push_back(x);
-                    vertices.push_back(y);
-                    vertices.push_back(z);
-                    vertices.push_back(nx);
-                    vertices.push_back(ny);
-                    vertices.push_back(nz);
-                }
-            }
-            
-            for (int ring = 0; ring < rings; ++ring)
-            {
-                for (int segment = 0; segment < segments; ++segment)
-                {
-                    uint32_t first = ring * (segments + 1) + segment;
-                    uint32_t second = first + segments + 1;
-                    
-                    indices.push_back(first);
-                    indices.push_back(second);
-                    indices.push_back(first + 1);
-                    
-                    indices.push_back(second);
-                    indices.push_back(second + 1);
-                    indices.push_back(first + 1);
-                }
-            }
-            
-            auto vertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(float))));
-            VertexBufferLayout layout;
-            layout.Push<float>(3);
-            layout.Push<float>(3);
-            vertexBuffer->SetLayout(layout);
-            
-            auto indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices.data(), static_cast<uint32_t>(indices.size())));
-            
-            sphereVAO = Ref<VertexArray>(VertexArray::Create());
-            sphereVAO->AddVertexBuffer(vertexBuffer);
-            sphereVAO->SetIndexBuffer(indexBuffer);
-        }
-        
         glm::mat4 view           = m_Camera.GetViewMatrix();
         glm::mat4 projection     = m_Camera.GetProjectionMatrix();
         glm::mat4 viewProjection = projection * view;
@@ -640,10 +653,13 @@ namespace Donut
         glm::vec3 lightPos  = m_Scene.m_LightPos;
         glm::vec3 cameraPos = m_Camera.GetOrbitalPosition();
         
-        sphereShader->Bind();
-        sphereShader->SetMat4("u_ViewProjection", viewProjection);
-        sphereShader->SetFloat3("u_LightPos", lightPos);
-        sphereShader->SetFloat3("u_CameraPos", cameraPos);
+        m_SphereShader->Bind();
+        m_SphereShader->SetMat4("u_ViewProjection", viewProjection);
+        m_SphereShader->SetFloat3("u_LightPos",  lightPos);
+        m_SphereShader->SetFloat3("u_CameraPos", cameraPos);
+
+        m_SphereShader->SetFloat3("u_OutlineColor", m_OutlineColor);
+        m_SphereShader->SetFloat("u_OutlineWidth",  m_OutlineWidth);
         
         for (size_t i = 0; i < m_Scene.objs.size(); ++i)
         {
@@ -652,25 +668,27 @@ namespace Donut
             glm::mat4 transform = glm::translate(glm::mat4(1.0f), obj.m_Centre);
                       transform = glm::scale(transform, glm::vec3(obj.m_Radius));
             
-            sphereShader->SetMat4("u_Transform", transform);
+            m_SphereShader->SetMat4("u_Transform", transform);
             
-            if (m_SelectedObjectIndex == static_cast<int>(i))
+            bool isSelected = (m_SelectedObjectIndex == static_cast<int>(i));
+            m_SphereShader->SetInt("u_IsSelected", isSelected ? 1 : 0);
+            if (isSelected)
             {
                 glm::vec3 highlightColor = obj.m_Material.m_Color * 1.5f;
                 highlightColor = glm::clamp(highlightColor, 0.0f, 1.0f);
-                sphereShader->SetFloat3("u_Color", highlightColor);
-                sphereShader->SetFloat("u_Emission", 0.2f);
+                m_SphereShader->SetFloat3("u_Color", highlightColor);
+                m_SphereShader->SetFloat("u_Emission", 0.2f);
             }
             else
             {
-                sphereShader->SetFloat3("u_Color", obj.m_Material.m_Color);
-                sphereShader->SetFloat("u_Emission", obj.m_Material.m_Emission);
+                m_SphereShader->SetFloat3("u_Color", obj.m_Material.m_Color);
+                m_SphereShader->SetFloat("u_Emission", obj.m_Material.m_Emission);
             }
             
-            sphereShader->SetFloat("u_Specular", obj.m_Material.m_Specular);
+            m_SphereShader->SetFloat("u_Specular", obj.m_Material.m_Specular);
             
-            sphereVAO->Bind();
-            RenderCommand::DrawIndexed(sphereVAO);
+            m_SphereVAO->Bind();
+            RenderCommand::DrawIndexed(m_SphereVAO);
         }
         
         RenderCommand::DisableDepthTest();

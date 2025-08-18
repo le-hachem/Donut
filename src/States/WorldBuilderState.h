@@ -39,10 +39,14 @@ namespace Donut
         void SaveScene();
         void LoadScene();
         void RenderScene();
+        void InitializeSphereGeometry();
     private:
         Scene  m_Scene;
         Camera m_Camera;
         bool   m_Initialized = false;
+        
+        Ref<Shader>      m_SphereShader;
+        Ref<VertexArray> m_SphereVAO;
         
         glm::vec3 m_NewObjectPosition = glm::vec3(0.0f, 0.0f, 0.0f);
         float     m_NewObjectRadius   = 1.0f;
@@ -61,5 +65,9 @@ namespace Donut
         bool m_ShowObjectCreator = true;
         bool m_ShowSceneInfo     = true;
         bool m_ShowGizmoControls = true;
+        bool m_ShowOutlineControls = true;
+
+        glm::vec3 m_OutlineColor = glm::vec3(1.0f, 1.0f, 1.0f);
+        float     m_OutlineWidth = 0.25f;
     };
 };

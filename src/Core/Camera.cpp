@@ -163,7 +163,7 @@ namespace Donut
 
     glm::vec3 Camera::GetOrbitalPosition() const
     {
-        float clampedElevation = glm::clamp(m_Elevation, 0.01f, float(M_PI) - 0.01f);
+        float clampedElevation = glm::clamp(m_Elevation, 0.01f, float(std::numbers::pi) - 0.01f);
         return glm::vec3
         (
             m_OrbitalRadius * sin(clampedElevation) * cos(m_Azimuth),
@@ -191,7 +191,7 @@ namespace Donut
             
             m_Azimuth   += dx * m_OrbitalSpeed;
             m_Elevation -= dy * m_OrbitalSpeed;
-            m_Elevation = glm::clamp(m_Elevation, 0.01f, float(M_PI) - 0.01f);
+            m_Elevation = glm::clamp(m_Elevation, 0.01f, float(std::numbers::pi) - 0.01f);
         }
         
         m_LastX_Orbital = x;

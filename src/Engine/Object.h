@@ -46,7 +46,7 @@ namespace Donut
             float a = glm::dot(ray.m_Direction, ray.m_Direction); 
             float b = 2.0f * glm::dot(oc, ray.m_Direction);
             float c = glm::dot(oc, oc) - m_Radius * m_Radius;
-            double discriminant = b*b - 4*a*c;
+            float discriminant = static_cast<float>(b*b - 4*a*c);
 
             if(discriminant < 0)
                 return false;

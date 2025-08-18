@@ -13,8 +13,8 @@ out vec3 v_WorldPos;
 
 void main()
 {
-    v_WorldPos = vec3(u_Transform * vec4(a_Position, 1.0));
-    v_Normal = mat3(transpose(inverse(u_Transform))) * a_Normal;
+    v_WorldPos  = vec3(u_Transform * vec4(a_Position, 1.0));
+    v_Normal    = mat3(transpose(inverse(u_Transform))) * a_Normal;
     gl_Position = u_ViewProjection * vec4(v_WorldPos, 1.0);
 }
 
@@ -30,6 +30,9 @@ uniform float u_Specular;
 uniform float u_Emission;
 uniform vec3  u_LightPos;
 uniform vec3  u_CameraPos;
+uniform int   u_IsSelected;
+uniform vec3  u_OutlineColor;
+uniform float u_OutlineWidth;
 
 out vec4 o_FragColor;
 
@@ -49,5 +52,15 @@ void main()
     vec3 emission = u_Color * u_Emission;
     
     vec3 result = ambient + diffuse + specular + emission;
+
+    if (u_IsSelected > 0)
+    {
+        float ndotv       = max(dot(normal, viewDir), 0.0);
+        float rim         = 1.0 - ndotv;
+        float width       = clamp(u_OutlineWidth, 0.0, 1.0);
+        float outlineMask = smoothstep(1.0 - width, 1.0, rim);
+        result = mix(result, u_OutlineColor, outlineMask);
+    }
+
     o_FragColor = vec4(result, 1.0);
 }

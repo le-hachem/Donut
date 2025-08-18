@@ -3,10 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define _USE_MATH_DEFINES
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include <numbers>
 
 namespace Donut
 {
@@ -121,7 +118,7 @@ namespace Donut
         double    m_OrbitalMinRadius = 1e10;
         double    m_OrbitalMaxRadius = 1e12;
         float     m_Azimuth          = 0.0f;
-        float     m_Elevation        = static_cast<float>(M_PI) / 2.0f;
+        float     m_Elevation        = static_cast<float>(std::numbers::pi) / 2.0f;
         float     m_OrbitalSpeed     = 0.01f;
         double    m_ZoomSpeed        = 25e9f;
         bool      m_Dragging         = false;

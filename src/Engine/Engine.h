@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <numbers>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -20,11 +21,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#define _USE_MATH_DEFINES
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 namespace Donut
 {
