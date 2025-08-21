@@ -216,15 +216,8 @@ namespace Donut
         ImGui::Separator();
         ImGui::Spacing();
 
-        float buttonWidth = (ImGui::GetWindowWidth() - 120) / 6.0f;
+        float buttonWidth = (ImGui::GetWindowWidth() - 120) / 5.0f;
         
-        if (ImGui::Button("Start Simulation", ImVec2(buttonWidth, 35)))
-        {
-            ApplySettings();
-            Application::Get().GetStateManager().SwitchToState("Simulation");
-        }
-        
-        ImGui::SameLine();
         if (ImGui::Button("World Builder", ImVec2(buttonWidth, 35)))
         {
             ApplySettings();

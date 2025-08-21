@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Engine.h"
+#include "Core/Log.h"
 #include "Rendering/VertexBuffer.h"
 #include "Rendering/IndexBuffer.h"
 
@@ -13,14 +14,14 @@ namespace Donut
     Engine::Engine()
         : m_SagA(glm::vec3(0.0f, 0.0f, 0.0f), 8.54e36f)
     {
-        GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-        glfwGetFramebufferSize(window, &m_Width, &m_Height);
+        m_Width = 1280;
+        m_Height = 720;
         
         m_Camera.SetCameraMode(CameraMode::Orbital);
-        m_Camera.SetOrbitalRadius(6.34194e10);
-        m_Camera.SetOrbitalLimits(1e10, 1e12);
+        m_Camera.SetOrbitalRadius(1e11);
+        m_Camera.SetOrbitalLimits(1e9, 1e13);
         m_Camera.SetOrbitalSpeed(0.01f);
-        m_Camera.SetZoomSpeed(25e9f);
+        m_Camera.SetZoomSpeed(1e10f);
         
         m_Objects = 
         {
@@ -47,12 +48,17 @@ namespace Donut
 
     void Engine::UpdateWindowDimensions()
     {
-        GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+        UpdateComputeDimensions();
+    }
+    
+    void Engine::SetWindowDimensions(int width, int height)
+    {
         int oldWidth = m_Width;
         int oldHeight = m_Height;
         int oldComputeHeight = m_ComputeHeight;
         
-        glfwGetFramebufferSize(window, &m_Width, &m_Height);
+        m_Width = width;
+        m_Height = height;
         
         if (oldWidth         != m_Width  || 
             oldHeight        != m_Height || 
@@ -273,5 +279,67 @@ namespace Donut
         auto texture = Texture2D::Create(GetComputeWidth(), m_ComputeHeight);
         
         return { vertexArray, texture };
+    }
+    
+    void Engine::LoadObjectsFromScene(const std::vector<Donut::Object>& objects)
+    {
+        m_Objects.clear();
+        m_Objects.push_back(
+        { 
+            glm::vec4(0.00f, 0.00f, 0.00f, m_SagA.m_Rs), 
+            glm::vec4(0, 0, 0, 1), 
+            static_cast<float>(m_SagA.m_Mass) 
+        });
+        
+        for (const auto& obj : objects)
+        {
+            ObjectData engineObj;
+            
+            float scaleFactor = 1e10f;
+            engineObj.m_PosRadius = glm::vec4
+            (
+                obj.m_Centre.x * scaleFactor,
+                obj.m_Centre.y * scaleFactor,
+                obj.m_Centre.z * scaleFactor,
+                obj.m_Radius * scaleFactor
+            );
+            
+            engineObj.m_Color = glm::vec4(obj.m_Material.m_Color, 1.0f);
+            
+            float volume  = (4.0f / 3.0f) * 3.14159f * engineObj.m_PosRadius.w * engineObj.m_PosRadius.w * engineObj.m_PosRadius.w;
+            float density = 1e12f;
+            engineObj.m_Mass     = volume * density;
+            engineObj.m_Velocity = glm::vec3(0.0f, 0.0f, 0.0f);
+            
+            m_Objects.push_back(engineObj);
+        }
+        
+        DONUT_INFO("Loaded {} objects from WorldBuilder scene (scaled up by {})", objects.size(), 1e10f);
+        PrintObjectInfo();
+    }
+    
+    void Engine::PrintObjectInfo() const
+    {
+        DONUT_INFO("=== Object Information ===");
+        DONUT_INFO("Total objects: {}", m_Objects.size());
+        
+        for (size_t i = 0; i < m_Objects.size(); ++i)
+        {
+            const auto& obj = m_Objects[i];
+            DONUT_INFO("Object {}: Pos=({:.2e}, {:.2e}, {:.2e}), Radius={:.2e}, Mass={:.2e}, Color=({:.2f}, {:.2f}, {:.2f})", 
+                i,
+                obj.m_PosRadius.x, obj.m_PosRadius.y, obj.m_PosRadius.z,
+                obj.m_PosRadius.w,
+                obj.m_Mass,
+                obj.m_Color.x, obj.m_Color.y, obj.m_Color.z
+            );
+        }
+        DONUT_INFO("Camera position: ({:.2e}, {:.2e}, {:.2e})", 
+            m_Camera.GetOrbitalPosition().x,
+            m_Camera.GetOrbitalPosition().y,
+            m_Camera.GetOrbitalPosition().z
+        );
+        DONUT_INFO("Camera radius: {:.2e}", m_Camera.GetOrbitalRadius());
+        DONUT_INFO("========================");
     }
 }

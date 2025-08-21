@@ -8,8 +8,9 @@
 #include <chrono>
 #include <cmath>
 
-#include "Core/Application.h"
 #include "Core/Camera.h"
+#include "Object.h"
+
 #include "Rendering/Renderer.h"
 #include "Rendering/Shader.h"
 #include "Rendering/VertexArray.h"
@@ -73,6 +74,7 @@ namespace Donut
         void RenderScene();
         void UpdatePhysics(float deltaTime);
         void UpdateWindowDimensions();
+        void SetWindowDimensions(int width, int height);
 
         int GetWidth()  const { return m_Width;  }
         int GetHeight() const { return m_Height; }
@@ -97,6 +99,9 @@ namespace Donut
         void  SetMaxStepsMoving(int steps) { m_MaxStepsMoving = steps; }
         void  SetMaxStepsStatic(int steps) { m_MaxStepsStatic = steps; }
         void  SetEarlyExitDistance(float distance) { m_EarlyExitDistance = distance; }
+        
+        void LoadObjectsFromScene(const std::vector<Donut::Object>& objects);
+        void PrintObjectInfo() const;
     private:
         Ref<Shader> CreateComputeProgram(const char* path);
         std::pair<Ref<VertexArray>, Ref<Texture2D>> QuadVAO();

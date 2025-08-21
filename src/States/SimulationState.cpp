@@ -15,15 +15,16 @@ namespace Donut
         DONUT_INFO("Entering Simulation State");
         
         const auto& settings = SettingsManager::GetSettingsConst();
+        auto& engine = Application::Get().GetEngine();
         
-        m_Engine.SetTargetFPS(settings.simulation.targetFPS);
-        m_Engine.SetComputeHeight(settings.simulation.computeHeight);
-        m_Engine.SetMaxStepsMoving(settings.simulation.maxStepsMoving);
-        m_Engine.SetMaxStepsStatic(settings.simulation.maxStepsStatic);
-        m_Engine.SetEarlyExitDistance(settings.simulation.earlyExitDistance);
-        m_Engine.GetGravity() = settings.simulation.gravityEnabled;
+        engine.SetTargetFPS(settings.simulation.targetFPS);
+        engine.SetComputeHeight(settings.simulation.computeHeight);
+        engine.SetMaxStepsMoving(settings.simulation.maxStepsMoving);
+        engine.SetMaxStepsStatic(settings.simulation.maxStepsStatic);
+        engine.SetEarlyExitDistance(settings.simulation.earlyExitDistance);
+        engine.GetGravity() = settings.simulation.gravityEnabled;
         
-        m_Engine.UpdateComputeDimensions();
+        engine.UpdateComputeDimensions();
         m_Initialized = true;
     }
     
@@ -34,38 +35,42 @@ namespace Donut
     
     void SimulationState::OnUpdate(float deltaTime)
     {
-        m_Engine.UpdatePerformance(deltaTime);
-        m_Engine.UpdateWindowDimensions();
-        m_Engine.UpdatePhysics(deltaTime);
+        auto& engine = Application::Get().GetEngine();
+        engine.UpdatePerformance(deltaTime);
+        engine.UpdateWindowDimensions();
+        engine.UpdatePhysics(deltaTime);
 
-        if (m_Engine.GetCamera().IsDragging())
+        if (engine.GetCamera().IsDragging())
         {
             GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
-            m_Engine.GetCamera().ProcessOrbitalMouseMove(xpos, ypos);
+            engine.GetCamera().ProcessOrbitalMouseMove(xpos, ypos);
         }
     }
     
     void SimulationState::OnRender()
     {
+        auto& engine = Application::Get().GetEngine();
         RenderCommand::SetClearColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         RenderCommand::Clear();
-        RenderCommand::SetViewport(0, 0, m_Engine.GetWidth(), m_Engine.GetHeight());
+        RenderCommand::SetViewport(0, 0, static_cast<uint32_t>(engine.GetWidth()), static_cast<uint32_t>(engine.GetHeight()));
 
-        m_Engine.DispatchCompute(m_Engine.GetCamera());
-        m_Engine.DrawFullScreenQuad();
+        engine.DispatchCompute(engine.GetCamera());
+        engine.DrawFullScreenQuad();
     }
     
     void SimulationState::OnEvent(Event& event)
     {
+        auto& engine = Application::Get().GetEngine();
+        
         if (event.GetEventType() == EventType::MouseButtonPressed)
         {
             MouseButtonPressedEvent& e = (MouseButtonPressedEvent&)event;
             int button = e.GetMouseButton();
             
             GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-            Camera& camera = m_Engine.GetCamera();
+            Camera& camera = engine.GetCamera();
             double lastX = camera.GetLastX();
             double lastY = camera.GetLastY();
             glfwGetCursorPos(window, &lastX, &lastY);
@@ -76,13 +81,13 @@ namespace Donut
         {
             MouseButtonReleasedEvent& e = (MouseButtonReleasedEvent&)event;
             int button = e.GetMouseButton();
-            m_Engine.GetCamera().ProcessOrbitalMouseButton(button, GLFW_RELEASE, 0);
+            engine.GetCamera().ProcessOrbitalMouseButton(button, GLFW_RELEASE, 0);
         }
         
         if (event.GetEventType() == EventType::MouseScrolled)
         {
             MouseScrolledEvent& e = (MouseScrolledEvent&)event;
-            m_Engine.GetCamera().ProcessOrbitalScroll(e.GetXOffset(), e.GetYOffset());
+            engine.GetCamera().ProcessOrbitalScroll(e.GetXOffset(), e.GetYOffset());
         }
         
         if (event.GetEventType() == EventType::KeyPressed)
@@ -90,14 +95,16 @@ namespace Donut
             KeyPressedEvent& e = (KeyPressedEvent&)event;
             if (e.GetKeyCode() == GLFW_KEY_G)
             {
-                m_Engine.GetGravity() = !m_Engine.GetGravity();
-                DONUT_INFO("Gravity turned {}", m_Engine.GetGravity() ? "ON" : "OFF");
+                engine.GetGravity() = !engine.GetGravity();
+                DONUT_INFO("Gravity turned {}", engine.GetGravity() ? "ON" : "OFF");
             }
         }
     }
     
     void SimulationState::OnImUIRender()
     {
+        auto& engine = Application::Get().GetEngine();
+        
         ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 420, 20), ImGuiCond_FirstUseEver);
         
@@ -111,12 +118,12 @@ namespace Donut
         if (ImGui::Button("Save Settings"))
         {
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
-            settings.targetFPS = m_Engine.GetTargetFPS();
-            settings.computeHeight = m_Engine.GetComputeHeight();
-            settings.maxStepsMoving = m_Engine.GetMaxStepsMoving();
-            settings.maxStepsStatic = m_Engine.GetMaxStepsStatic();
-            settings.earlyExitDistance = m_Engine.GetEarlyExitDistance();
-            settings.gravityEnabled = m_Engine.GetGravity();
+            settings.targetFPS = engine.GetTargetFPS();
+            settings.computeHeight = engine.GetComputeHeight();
+            settings.maxStepsMoving = engine.GetMaxStepsMoving();
+            settings.maxStepsStatic = engine.GetMaxStepsStatic();
+            settings.earlyExitDistance = engine.GetEarlyExitDistance();
+            settings.gravityEnabled = engine.GetGravity();
             SettingsManager::SetSimulationSettings(settings);
             DONUT_INFO("Simulation settings saved manually");
         }
@@ -128,12 +135,12 @@ namespace Donut
         
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("Frame Time: %.3f ms", 1000.0f / ImGui::GetIO().Framerate);
-        ImGui::Text("Engine FPS: %.1f", m_Engine.GetCurrentFPS());
+        ImGui::Text("Engine FPS: %.1f", engine.GetCurrentFPS());
         
-        int targetFPS = m_Engine.GetTargetFPS();
+        int targetFPS = engine.GetTargetFPS();
         if (ImGui::SliderInt("Target FPS", &targetFPS, 30, 120))
         {
-            m_Engine.SetTargetFPS(targetFPS);
+            engine.SetTargetFPS(targetFPS);
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
             settings.targetFPS = targetFPS;
             SettingsManager::SetSimulationSettings(settings);
@@ -144,47 +151,52 @@ namespace Donut
         ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Simulation Info");
         ImGui::Separator();
         
-        ImGui::Text("Resolution: %dx%d", m_Engine.GetWidth(), m_Engine.GetHeight());
-        ImGui::Text("Compute Resolution: %dx%d", m_Engine.GetComputeWidth(), m_Engine.GetComputeHeight());
-        ImGui::Text("Objects: %zu", m_Engine.GetObjects().size());
+        ImGui::Text("Resolution: %dx%d", engine.GetWidth(), engine.GetHeight());
+        ImGui::Text("Compute Resolution: %dx%d", engine.GetComputeWidth(), engine.GetComputeHeight());
+        ImGui::Text("Objects: %zu", engine.GetObjects().size());
         
-        int computeHeight = m_Engine.GetComputeHeight();
+        if (ImGui::Button("Print Object Info"))
+        {
+            engine.PrintObjectInfo();
+        }
+        
+        int computeHeight = engine.GetComputeHeight();
         if (ImGui::SliderInt("Compute Height", &computeHeight, 64, 2048))
         {
-            m_Engine.SetComputeHeight(computeHeight);
-            m_Engine.UpdateComputeDimensions();
+            engine.SetComputeHeight(computeHeight);
+            engine.UpdateComputeDimensions();
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
             settings.computeHeight = computeHeight;
             SettingsManager::SetSimulationSettings(settings);
         }
         
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Compute Width: %d (auto-calculated)", m_Engine.GetComputeWidth());
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Compute Width: %d (auto-calculated)", engine.GetComputeWidth());
         
         ImGui::Spacing();
         
         ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Quality Settings");
         ImGui::Separator();
         
-        int maxStepsMoving = m_Engine.GetMaxStepsMoving();
+        int maxStepsMoving = engine.GetMaxStepsMoving();
         if (ImGui::SliderInt("Max Steps (Moving)", &maxStepsMoving, 1000, 60000))
         {
-            m_Engine.SetMaxStepsMoving(maxStepsMoving);
+            engine.SetMaxStepsMoving(maxStepsMoving);
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
             settings.maxStepsMoving = maxStepsMoving;
             SettingsManager::SetSimulationSettings(settings);
         }
-        int maxStepsStatic = m_Engine.GetMaxStepsStatic();
+        int maxStepsStatic = engine.GetMaxStepsStatic();
         if (ImGui::SliderInt("Max Steps (Static)", &maxStepsStatic, 1000, 30000))
         {
-            m_Engine.SetMaxStepsStatic(maxStepsStatic);
+            engine.SetMaxStepsStatic(maxStepsStatic);
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
             settings.maxStepsStatic = maxStepsStatic;
             SettingsManager::SetSimulationSettings(settings);
         }
-        float earlyExitDistance = m_Engine.GetEarlyExitDistance();
+        float earlyExitDistance = engine.GetEarlyExitDistance();
         if (ImGui::SliderFloat("Early Exit Distance", &earlyExitDistance, 1e11f, 1e13f, "%.2e"))
         {
-            m_Engine.SetEarlyExitDistance(earlyExitDistance);
+            engine.SetEarlyExitDistance(earlyExitDistance);
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
             settings.earlyExitDistance = earlyExitDistance;
             SettingsManager::SetSimulationSettings(settings);
@@ -195,7 +207,7 @@ namespace Donut
         ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Physics");
         ImGui::Separator();
         
-        bool& gravity = m_Engine.GetGravity();
+        bool& gravity = engine.GetGravity();
         if (ImGui::Checkbox("Gravity Enabled", &gravity))
         {
             SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
@@ -209,12 +221,12 @@ namespace Donut
         ImGui::Separator();
         
         ImGui::Text("Position: (%.2e, %.2e, %.2e)", 
-                   m_Engine.GetCamera().GetOrbitalPosition().x, 
-                   m_Engine.GetCamera().GetOrbitalPosition().y, 
-                   m_Engine.GetCamera().GetOrbitalPosition().z);
-        ImGui::Text("Radius: %.2e", m_Engine.GetCamera().GetOrbitalRadius());
-        ImGui::Text("Azimuth: %.2f", m_Engine.GetCamera().GetAzimuth());
-        ImGui::Text("Elevation: %.2f", m_Engine.GetCamera().GetElevation());
+                   engine.GetCamera().GetOrbitalPosition().x, 
+                   engine.GetCamera().GetOrbitalPosition().y, 
+                   engine.GetCamera().GetOrbitalPosition().z);
+        ImGui::Text("Radius: %.2e", engine.GetCamera().GetOrbitalRadius());
+        ImGui::Text("Azimuth: %.2f", engine.GetCamera().GetAzimuth());
+        ImGui::Text("Elevation: %.2f", engine.GetCamera().GetElevation());
         
         ImGui::Spacing();
         

@@ -22,7 +22,6 @@ namespace Donut
         void OnEvent(Event& event)     override;
     
     private:
-        Engine m_Engine;
         bool m_Initialized = false;
     };
 };

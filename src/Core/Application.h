@@ -1,10 +1,12 @@
 #pragma once
 
+#include "StateManager.h"
 #include "Memory.h"
 #include "Window.h"
 #include "Event.h"
 #include "Log.h"
-#include "StateManager.h"
+
+#include "Engine/Engine.h"
 
 namespace Donut
 {
@@ -18,9 +20,10 @@ namespace Donut
         void Run();
         void Close();
 
-        Window& GetWindow()       { return *m_Window;   }
+        Window& GetWindow()             { return *m_Window;       }
         StateManager& GetStateManager() { return *m_StateManager; }
-        static Application& Get() { return *s_Instance; }
+        Engine& GetEngine()             { return *m_Engine;       }
+        static Application& Get()       { return *s_Instance;     }
     private:
         void OnInit();
         void OnShutdown();
@@ -31,6 +34,7 @@ namespace Donut
     private:
         Scope<StateManager> m_StateManager;
         Scope<Window> m_Window;
+        Scope<Engine> m_Engine;
 
         bool m_Running;
         bool m_Minimized;

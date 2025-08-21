@@ -484,6 +484,18 @@ namespace Donut
         
         ImGui::Spacing();
         
+        if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowWidth() - 20, 30)))
+        {
+            // Load objects from WorldBuilder scene into Engine
+            auto& engine = Application::Get().GetEngine();
+            engine.LoadObjectsFromScene(m_Scene.objs);
+            
+            // Switch to simulation state
+            Application::Get().GetStateManager().SwitchToState("Simulation");
+        }
+        
+        ImGui::Spacing();
+        
         if (ImGui::Button("Back to Config", ImVec2(ImGui::GetWindowWidth() - 20, 30)))
             Application::Get().GetStateManager().SwitchToState("Config");
         
@@ -550,7 +562,6 @@ namespace Donut
         Object   sphere(m_NewObjectPosition, m_NewObjectRadius, material);
         m_Scene.objs.push_back(sphere);
         
-        // Automatically select the newly created object
         m_SelectedObjectIndex = static_cast<int>(m_Scene.objs.size() - 1);
         
         m_NewObjectPosition = glm::vec3(0.0f, 0.0f, 0.0f);

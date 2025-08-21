@@ -71,6 +71,7 @@ namespace Donut
                 m_Minimized = false;
             
             Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+            m_Engine->SetWindowDimensions(e.GetWidth(), e.GetHeight());
             event.Handled = true;
             return true;
         });
@@ -118,6 +119,9 @@ namespace Donut
         Renderer::OnWindowResize(1280, 720);
         RenderCommand::SetFaceCulling(false);
 
+        m_Engine = CreateScope<Engine>();
+        m_Engine->SetWindowDimensions(1280, 720);
+        
         m_StateManager = CreateScope<StateManager>();
         m_StateManager->RegisterState("Config",       CreateScope<ConfigState>());
         m_StateManager->RegisterState("Simulation",   CreateScope<SimulationState>());
