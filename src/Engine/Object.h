@@ -22,6 +22,7 @@ namespace Donut
         float     m_Specular;
         float     m_Emission;
 
+        Material() : m_Color(1.0f, 1.0f, 1.0f), m_Specular(0.5f), m_Emission(0.0f) { }
         Material(glm::vec3 c, float s, float e)
             : m_Color(c), 
               m_Specular(s), 
@@ -35,6 +36,7 @@ namespace Donut
         float     m_Radius;
         Material  m_Material;
     
+        Object() : m_Centre(0.0f, 0.0f, 0.0f), m_Radius(1.0f), m_Material() { }
         Object(glm::vec3 c, float r, Material m) 
             : m_Centre(c), 
               m_Radius(r), 

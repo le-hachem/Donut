@@ -46,6 +46,11 @@ namespace Donut
         m_SphereShader = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
         InitializeSphereGeometry();
         
+        // Initialize the black hole at the center
+        Material blackHoleMaterial(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f); // Pure black, no specular, no emission
+        m_BlackHole = Object(glm::vec3(0.0f, 0.0f, 0.0f), 2.0f, blackHoleMaterial); // Position at origin, radius 2
+        m_BlackHoleInitialized = true;
+        
         m_Initialized = true;
     }
     
@@ -85,7 +90,7 @@ namespace Donut
     
     void WorldBuilderState::OnRender()
     {
-        RenderCommand::SetClearColor(glm::vec4(0.05f, 0.05f, 0.05f, 1.0f));
+        RenderCommand::SetClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
         RenderCommand::Clear();
         RenderScene();
     }
@@ -128,6 +133,32 @@ namespace Donut
                 float closestDistance  = std::numeric_limits<float>::max();
                 int closestObjectIndex = -1;
                 
+                if (m_BlackHoleInitialized)
+                {
+                    glm::vec3 oc       = rayOrigin - m_BlackHole.m_Centre;
+                    float a            = glm::dot(rayDir, rayDir);
+                    float b            = 2.0f * glm::dot(oc, rayDir);
+                    float c            = glm::dot(oc, oc) - m_BlackHole.m_Radius * m_BlackHole.m_Radius;
+                    float discriminant = b * b - 4 * a * c;
+                    
+                    if (discriminant > 0)
+                    {
+                        float t1 = (-b - sqrt(discriminant)) / (2.0f * a);
+                        float t2 = (-b + sqrt(discriminant)) / (2.0f * a);
+                        
+                        if (t1 > 0 && t1 < closestDistance)
+                        {
+                            closestDistance = t1;
+                            closestObjectIndex = -2;
+                        }
+                        else if (t2 > 0 && t2 < closestDistance)
+                        {
+                            closestDistance = t2;
+                            closestObjectIndex = -2;
+                        }
+                    }
+                }
+                
                 for (size_t i = 0; i < m_Scene.objs.size(); ++i)
                 {
                     const Object& obj = m_Scene.objs[i];
@@ -160,6 +191,12 @@ namespace Donut
                 {
                     m_SelectedObjectIndex = closestObjectIndex;
                     DONUT_INFO("Selected object {}", closestObjectIndex);
+                    return true;
+                }
+                else if (closestObjectIndex == -2)
+                {
+                    m_SelectedObjectIndex = -1;
+                    DONUT_INFO("Black hole clicked (not selectable)");
                     return true;
                 }
                 else
@@ -257,9 +294,9 @@ namespace Donut
         ImGui::PopFont();
         ImGui::Separator();
         
-         if (ImGui::CollapsingHeader("Scene Info", &m_ShowSceneInfo))
+                 if (ImGui::CollapsingHeader("Scene Info", &m_ShowSceneInfo))
          {
-            ImGui::Text("Objects in scene: %zu", m_Scene.objs.size());
+            ImGui::Text("Objects in scene: %zu/16 (+ 1 black hole)", m_Scene.objs.size());
             
             ImGui::Separator();
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Camera Info:");
@@ -310,6 +347,9 @@ namespace Donut
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "New Sphere");
             ImGui::Separator();
             
+            // Show object count and limit
+            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Objects: %zu/16", m_Scene.objs.size());
+            
             ImGui::Text("Position:");
             ImGui::DragFloat3("##Position", &m_NewObjectPosition.x, 0.1f);
             
@@ -327,16 +367,40 @@ namespace Donut
             
             ImGui::Spacing();
             
-            if (ImGui::Button("Add Sphere", ImVec2(ImGui::GetWindowWidth() - 20, 30)))
-                AddSphere();
+            // Disable button if object limit reached
+            if (m_Scene.objs.size() >= 16)
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+                ImGui::Button("Add Sphere (Limit Reached)", ImVec2(ImGui::GetWindowWidth() - 20, 30));
+                ImGui::PopStyleVar();
+            }
+            else
+            {
+                if (ImGui::Button("Add Sphere", ImVec2(ImGui::GetWindowWidth() - 20, 30)))
+                    AddSphere();
+            }
         }
         
         ImGui::Spacing();
         
         if (ImGui::CollapsingHeader("Scene Objects", &m_ShowObjectList))
         {
+            if (m_BlackHoleInitialized)
+            {
+                ImGui::PushID(-1);
+                
+                ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Black Hole (Center)");
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Position: (0.00, 0.00, 0.00)");
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Radius: %.2f", m_BlackHole.m_Radius);
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Color: Black (with white outline)");
+                ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Cannot be removed or modified");
+                
+                ImGui::PopID();
+                ImGui::Separator();
+            }
+            
             if (m_Scene.objs.empty())
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No objects in scene");
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No additional objects in scene");
             else
             {
                 for (size_t i = 0; i < m_Scene.objs.size(); ++i)
@@ -431,7 +495,8 @@ namespace Donut
         ImGui::End();
         
         if (m_SelectedObjectIndex >= 0 && 
-            m_SelectedObjectIndex < static_cast<int>(m_Scene.objs.size()))
+            m_SelectedObjectIndex < static_cast<int>(m_Scene.objs.size()) &&
+            m_SelectedObjectIndex != -2)
         {
             glm::mat4 view       = m_Camera.GetViewMatrix();
             glm::mat4 projection = m_Camera.GetProjectionMatrix();
@@ -458,24 +523,35 @@ namespace Donut
                 glm::vec3 newPosition = glm::vec3(objectTransform[3][0], objectTransform[3][1], objectTransform[3][2]);
                 selectedObj.m_Centre = newPosition;
                 
-                glm::vec3 scale = glm::vec3(
+                glm::vec3 scale = glm::vec3
+                (
                     glm::length(glm::vec3(objectTransform[0])),
                     glm::length(glm::vec3(objectTransform[1])),
                     glm::length(glm::vec3(objectTransform[2]))
                 );
-                selectedObj.m_Radius = (scale.x + scale.y + scale.z) / 3.0f; // Average scale
+                selectedObj.m_Radius = (scale.x + scale.y + scale.z) / 3.0f;
                 
                 DONUT_INFO("Matrix [3]: ({}, {}, {}, {})", objectTransform[3][0], objectTransform[3][1], objectTransform[3][2], objectTransform[3][3]);
                 DONUT_INFO("New position: ({}, {}, {})", newPosition.x, newPosition.y, newPosition.z);
             }
         }
-     }
+    }
     
     void WorldBuilderState::AddSphere()
     {
+        // Check if we've reached the object limit (16 objects)
+        if (m_Scene.objs.size() >= 16)
+        {
+            DONUT_WARN("Cannot add more objects. Maximum of 16 objects reached.");
+            return;
+        }
+        
         Material material(m_NewObjectColor, m_NewObjectSpecular, m_NewObjectEmission);
         Object   sphere(m_NewObjectPosition, m_NewObjectRadius, material);
         m_Scene.objs.push_back(sphere);
+        
+        // Automatically select the newly created object
+        m_SelectedObjectIndex = static_cast<int>(m_Scene.objs.size() - 1);
         
         m_NewObjectPosition = glm::vec3(0.0f, 0.0f, 0.0f);
         m_NewObjectRadius   = 1.0f;
@@ -483,7 +559,7 @@ namespace Donut
         m_NewObjectSpecular = 0.5f;
         m_NewObjectEmission = 0.0f;
         
-        DONUT_INFO("Added sphere to scene");
+        DONUT_INFO("Added sphere to scene and selected it");
     }
     
     void WorldBuilderState::RemoveSelectedObject()
@@ -500,7 +576,7 @@ namespace Donut
     {
         m_Scene.objs.clear();
         m_SelectedObjectIndex = -1;
-        DONUT_INFO("Cleared scene");
+        DONUT_INFO("Cleared scene (black hole remains at center)");
     }
     
     void WorldBuilderState::SaveScene()
@@ -536,7 +612,7 @@ namespace Donut
         {
             file << sceneData.dump(4);
             file.close();
-            DONUT_INFO("Scene saved to Scene.json");
+            DONUT_INFO("Scene saved to Scene.json (black hole always present at center)");
         }
         else
             DONUT_ERROR("Failed to save scene");
@@ -584,7 +660,7 @@ namespace Donut
             }
             
             file.close();
-            DONUT_INFO("Scene loaded from Scene.json");
+            DONUT_INFO("Scene loaded from Scene.json (black hole remains at center)");
         }
         else
             DONUT_ERROR("Failed to load scene");
@@ -680,6 +756,24 @@ namespace Donut
 
         m_SphereShader->SetFloat3("u_OutlineColor", m_OutlineColor);
         m_SphereShader->SetFloat("u_OutlineWidth",  m_OutlineWidth);
+        
+        if (m_BlackHoleInitialized)
+        {
+            glm::mat4 blackHoleTransform = glm::translate(glm::mat4(1.0f), m_BlackHole.m_Centre);
+                      blackHoleTransform = glm::scale(blackHoleTransform, glm::vec3(m_BlackHole.m_Radius));
+            
+            m_SphereShader->SetMat4("u_Transform", blackHoleTransform);
+            m_SphereShader->SetInt("u_IsSelected", 1);
+            m_SphereShader->SetFloat3("u_Color", m_BlackHole.m_Material.m_Color);
+            m_SphereShader->SetFloat("u_Emission", m_BlackHole.m_Material.m_Emission);
+            m_SphereShader->SetFloat("u_Specular", m_BlackHole.m_Material.m_Specular);
+            m_SphereShader->SetFloat("u_OutlineWidth", 0.3f);
+            
+            m_SphereVAO->Bind();
+            RenderCommand::DrawIndexed(m_SphereVAO);
+            
+            m_SphereShader->SetFloat("u_OutlineWidth", m_OutlineWidth);
+        }
         
         for (size_t i = 0; i < m_Scene.objs.size(); ++i)
         {

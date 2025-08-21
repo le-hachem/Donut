@@ -46,19 +46,18 @@ void main()
     float diff = max(dot(normal, lightDir), 0.0);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     
-    vec3 ambient  = u_Color * 0.1;
     vec3 diffuse  = u_Color * diff;
     vec3 specular = vec3(u_Specular) * spec;
     vec3 emission = u_Color * u_Emission;
     
-    vec3 result = ambient + diffuse + specular + emission;
+    vec3 result = diffuse + specular + emission;
 
     if (u_IsSelected > 0)
     {
         float ndotv       = max(dot(normal, viewDir), 0.0);
         float rim         = 1.0 - ndotv;
         float width       = clamp(u_OutlineWidth, 0.0, 1.0);
-        float outlineMask = smoothstep(1.0 - width, 1.0, rim);
+        float outlineMask = step(1.0 - u_OutlineWidth, rim);;
         result = mix(result, u_OutlineColor, outlineMask);
     }
 

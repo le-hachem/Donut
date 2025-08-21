@@ -91,7 +91,6 @@ namespace Donut
         int   GetComputeWidth()      const { return (m_Width * m_ComputeHeight) / m_Height; }
         void  UpdateComputeDimensions();
         
-        // Simulation parameters
         int   GetMaxStepsMoving()    const { return m_MaxStepsMoving; }
         int   GetMaxStepsStatic()    const { return m_MaxStepsStatic; }
         float GetEarlyExitDistance() const { return m_EarlyExitDistance; }

@@ -24,8 +24,6 @@ namespace Donut
         
         m_Objects = 
         {
-            { glm::vec4(4e11f, 0.00f, 0.00f, 4e10f),       glm::vec4(1, 1, 0, 1), static_cast<float>(1.98892e30)    },
-            { glm::vec4(0.00f, 0.00f, 4e11f, 4e10f),       glm::vec4(1, 0, 0, 1), static_cast<float>(1.98892e30)    },
             { glm::vec4(0.00f, 0.00f, 0.00f, m_SagA.m_Rs), glm::vec4(0, 0, 0, 1), static_cast<float>(m_SagA.m_Mass) }
         };
 

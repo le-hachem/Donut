@@ -69,5 +69,8 @@ namespace Donut
 
         glm::vec3 m_OutlineColor = glm::vec3(1.0f, 1.0f, 1.0f);
         float     m_OutlineWidth = 0.25f;
+        
+        Object m_BlackHole;
+        bool   m_BlackHoleInitialized = false;
     };
 };
