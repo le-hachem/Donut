@@ -32,6 +32,7 @@ IncludeDir["imgui_backends"] = "Vendor/imgui/backends"
 IncludeDir["imguizmo"]       = "Vendor/ImGuizmo"
 IncludeDir["toml11"]         = "Vendor/toml11/include"
 IncludeDir["nlohmann"]       = "Vendor/json/single_include"
+IncludeDir["stb"]            = "Vendor/stb"
 
 group "Dependencies"
 
@@ -312,6 +313,10 @@ project "Donut"
 
 		"src/**.h",
 		"src/**.cpp",
+		"src/Rendering/Framebuffer.h",
+		"src/Rendering/Framebuffer.cpp",
+		"src/Platform/OpenGL/OpenGLFramebuffer.h",
+		"src/Platform/OpenGL/OpenGLFramebuffer.cpp",
 		
 		"Vendor/imgui/backends/imgui_impl_glfw.cpp",
 		"Vendor/imgui/backends/imgui_impl_opengl3.cpp",
@@ -333,6 +338,7 @@ project "Donut"
 		"%{IncludeDir.imguizmo}",
 		"%{IncludeDir.toml11}",
 		"%{IncludeDir.nlohmann}",
+		"%{IncludeDir.stb}",
 	}
 
     links

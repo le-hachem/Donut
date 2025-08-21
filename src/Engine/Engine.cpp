@@ -3,6 +3,10 @@
 #include <sstream>
 
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 #include "Engine.h"
 #include "Core/Log.h"
@@ -326,7 +330,7 @@ namespace Donut
         for (size_t i = 0; i < m_Objects.size(); ++i)
         {
             const auto& obj = m_Objects[i];
-            DONUT_INFO("Object {}: Pos=({:.2e}, {:.2e}, {:.2e}), Radius={:.2e}, Mass={:.2e}, Color=({:.2f}, {:.2f}, {:.2f})", 
+            DONUT_INFO("Object {}: Pos=({}, {}, {}), Radius={}, Mass={}, Color=({}, {}, {})", 
                 i,
                 obj.m_PosRadius.x, obj.m_PosRadius.y, obj.m_PosRadius.z,
                 obj.m_PosRadius.w,
@@ -334,12 +338,156 @@ namespace Donut
                 obj.m_Color.x, obj.m_Color.y, obj.m_Color.z
             );
         }
-        DONUT_INFO("Camera position: ({:.2e}, {:.2e}, {:.2e})", 
+        DONUT_INFO("Camera position: ({}, {}, {})", 
             m_Camera.GetOrbitalPosition().x,
             m_Camera.GetOrbitalPosition().y,
             m_Camera.GetOrbitalPosition().z
         );
-        DONUT_INFO("Camera radius: {:.2e}", m_Camera.GetOrbitalRadius());
+        DONUT_INFO("Camera radius: {}", m_Camera.GetOrbitalRadius());
         DONUT_INFO("========================");
+    }
+    
+    void Engine::ExportHighResFrame(const std::string& filename, int width, int height)
+    {
+        DONUT_INFO("Exporting high-resolution frame: {}x{} to {}", width, height, filename);
+        
+        if (width <= 0 || height <= 0)
+        {
+            DONUT_ERROR("Invalid dimensions for export: {}x{}", width, height);
+            return;
+        }
+        
+        if (filename.empty())
+        {
+            DONUT_ERROR("Invalid filename for export");
+            return;
+        }
+        
+        int originalWidth = m_Width;
+        int originalHeight = m_Height;
+        int originalComputeHeight = m_ComputeHeight;
+        
+        m_Width = width;
+        m_Height = height;
+        m_ComputeHeight = height;
+        
+        int computeHeight = height;
+        int computeWidth = (width * computeHeight) / height;
+        
+        if (computeWidth <= 0 || computeHeight <= 0)
+        {
+            DONUT_ERROR("Invalid compute dimensions: {}x{}", computeWidth, computeHeight);
+            return;
+        }
+        
+        FramebufferSpecification fbSpec;
+        fbSpec.Width = width;
+        fbSpec.Height = height;
+        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8 };
+        
+        auto highResFramebuffer = Framebuffer::Create(fbSpec);
+        if (!highResFramebuffer)
+        {
+            DONUT_ERROR("Failed to create high-resolution framebuffer");
+            return;
+        }
+        
+        highResFramebuffer->Bind();
+        
+        RenderCommand::SetViewport(0, 0, width, height);
+        RenderCommand::Clear();
+        
+        auto highResTexture = Texture2D::Create(computeWidth, computeHeight);
+        if (!highResTexture)
+        {
+            DONUT_ERROR("Failed to create high-resolution texture");
+            return;
+        }
+        
+        highResTexture->SetData(nullptr, computeWidth * computeHeight * 4);
+        m_ComputeProgram->Bind();
+        
+        struct UBOData
+        {
+            glm::vec3 pos;     float _pad0;
+            glm::vec3 right;   float _pad1;
+            glm::vec3 up;      float _pad2;
+            glm::vec3 forward; float _pad3;
+            float tanHalfFov;
+            float aspect;
+            bool  moving;
+            int   _pad4;
+        } data;
+
+        glm::vec3 fwd   = glm::normalize(m_Camera.GetOrbitalTarget() - m_Camera.GetOrbitalPosition());
+        glm::vec3 up    = glm::vec3(0, 1, 0);
+        glm::vec3 right = glm::normalize(glm::cross(fwd, up));
+        up = glm::cross(right, fwd);
+
+        data.pos        = m_Camera.GetOrbitalPosition();
+        data.right      = right;
+        data.up         = up;
+        data.forward    = fwd;
+        data.tanHalfFov = static_cast<float>(tan(glm::radians(60.0f * 0.5f)));
+        data.aspect     = static_cast<float>(computeWidth) / static_cast<float>(computeHeight);
+        data.moving     = m_Camera.IsDragging() || m_Camera.IsPanning();
+
+        m_CameraUBO->SetData(&data, sizeof(UBOData));
+        m_CameraUBO->Bind(1);
+        
+        UploadDiskUBO();
+        UploadObjectsUBO(m_Objects);
+        UploadSimulationUBO();
+        highResTexture->BindAsImage(0, false);
+        
+        uint32_t groupsX = static_cast<uint32_t>(std::ceil(computeWidth / 16.0f));
+        uint32_t groupsY = static_cast<uint32_t>(std::ceil(computeHeight / 16.0f));
+        m_ComputeProgram->Dispatch(groupsX, groupsY, 1);
+        m_ComputeProgram->MemoryBarrier(IMAGE_ACCESS_BARRIER_BIT);
+        
+        m_ShaderProgram->Bind();
+        m_QuadVAO->Bind();
+        
+        highResTexture->Bind(0);
+        m_ShaderProgram->SetInt("u_ScreenTexture", 0);
+        
+        RenderCommand::DisableDepthTest();
+        RenderCommand::DrawArrays(6);
+        RenderCommand::EnableDepthTest();
+        
+        std::vector<unsigned char> pixels(width * height * 4);
+        DONUT_INFO("Reading {} pixels from framebuffer...", width * height);
+        RenderCommand::ReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        
+        DONUT_INFO("Flipping image vertically...");
+        std::vector<unsigned char> flippedPixels(width * height * 4);
+        for (int y = 0; y < height; ++y)
+        {
+            for (int x = 0; x < width; ++x)
+            {
+                int srcIndex = (y * width + x) * 4;
+                int dstIndex = ((height - 1 - y) * width + x) * 4;
+                flippedPixels[dstIndex + 0] = pixels[srcIndex + 0]; // R
+                flippedPixels[dstIndex + 1] = pixels[srcIndex + 1]; // G
+                flippedPixels[dstIndex + 2] = pixels[srcIndex + 2]; // B
+                flippedPixels[dstIndex + 3] = pixels[srcIndex + 3]; // A
+            }
+        }
+        
+        DONUT_INFO("Saving PNG file: {}...", filename);
+        int result = stbi_write_png(filename.c_str(), width, height, 4, flippedPixels.data(), width * 4);
+        
+        if (result)
+            DONUT_INFO("Successfully exported high-resolution frame to: {}", filename);
+        else
+            DONUT_ERROR("Failed to export high-resolution frame to: {}", filename);
+        
+        highResFramebuffer->Unbind();
+        
+        m_Width         = originalWidth;
+        m_Height        = originalHeight;
+        m_ComputeHeight = originalComputeHeight;
+        
+        RenderCommand::SetViewport(0, 0, originalWidth, originalHeight);
     }
 }

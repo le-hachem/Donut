@@ -101,6 +101,7 @@ namespace Donut
         void  SetEarlyExitDistance(float distance) { m_EarlyExitDistance = distance; }
         
         void LoadObjectsFromScene(const std::vector<Donut::Object>& objects);
+        void ExportHighResFrame(const std::string& filename, int width = 4096, int height = 3072);
         void PrintObjectInfo() const;
     private:
         Ref<Shader> CreateComputeProgram(const char* path);

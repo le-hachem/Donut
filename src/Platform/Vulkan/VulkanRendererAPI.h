@@ -32,5 +32,7 @@ namespace Donut
         virtual void BindImageTexture(uint32_t textureID, 
                                       uint32_t slot = 0, 
                                       bool readOnly = false)      override;
+        virtual void ReadPixels(uint32_t x, uint32_t y, uint32_t width, uint32_t height, 
+                                uint32_t format, uint32_t type, void* pixels) override;
     };
 };

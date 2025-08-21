@@ -4,6 +4,7 @@ config/
 *.log
 imgui.ini
 Scene.json
+frame_*.png
 
 bin/
 bin-int/

@@ -71,4 +71,16 @@ namespace Donut
     {
         // TODO(Hachem): Implement Vulkan image texture binding
     }
+
+    void VulkanRendererAPI::ReadPixels(uint32_t x, uint32_t y, uint32_t width, uint32_t height, 
+                                       uint32_t format, uint32_t type, void* pixels)
+    {
+        // TODO(Hachem): Implement Vulkan pixel reading
+        // For now, this is a placeholder implementation
+        // In a real Vulkan implementation, this would involve:
+        // 1. Creating a staging buffer
+        // 2. Copying the framebuffer to the staging buffer
+        // 3. Mapping the staging buffer and copying to the pixels array
+        // 4. Unmapping and destroying the staging buffer
+    }
 };

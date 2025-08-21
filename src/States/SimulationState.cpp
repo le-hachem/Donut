@@ -7,6 +7,9 @@
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 namespace Donut
 {
@@ -227,6 +230,51 @@ namespace Donut
         ImGui::Text("Radius: %.2e", engine.GetCamera().GetOrbitalRadius());
         ImGui::Text("Azimuth: %.2f", engine.GetCamera().GetAzimuth());
         ImGui::Text("Elevation: %.2f", engine.GetCamera().GetElevation());
+        
+        ImGui::Spacing();
+        
+        ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Export");
+        ImGui::Separator();
+        
+        if (ImGui::Button("Export Frame (1080p)", ImVec2(-1, 30)))
+        {
+            auto& engine = Application::Get().GetEngine();
+            auto now = std::chrono::system_clock::now();
+            auto time_t = std::chrono::system_clock::to_time_t(now);
+            std::stringstream ss;
+            ss << "frame_1080p_" << std::put_time(std::localtime(&time_t), "%Y-%m-%d_%H-%M-%S") << ".png";
+            engine.ExportHighResFrame(ss.str(), 1920, 1080);
+        }
+        
+        if (ImGui::Button("Export High-Res Frame (4K)", ImVec2(-1, 30)))
+        {
+            auto& engine = Application::Get().GetEngine();
+            auto now = std::chrono::system_clock::now();
+            auto time_t = std::chrono::system_clock::to_time_t(now);
+            std::stringstream ss;
+            ss << "high_res_frame_4k_" << std::put_time(std::localtime(&time_t), "%Y-%m-%d_%H-%M-%S") << ".png";
+            engine.ExportHighResFrame(ss.str(), 4096, 3072);
+        }
+        
+        if (ImGui::Button("Export High-Res Frame (8K)", ImVec2(-1, 30)))
+        {
+            auto& engine = Application::Get().GetEngine();
+            auto now = std::chrono::system_clock::now();
+            auto time_t = std::chrono::system_clock::to_time_t(now);
+            std::stringstream ss;
+            ss << "high_res_frame_8k_" << std::put_time(std::localtime(&time_t), "%Y-%m-%d_%H-%M-%S") << ".png";
+            engine.ExportHighResFrame(ss.str(), 8192, 6144);
+        }
+        
+        if (ImGui::Button("Export Ultra High-Res Frame (16K)", ImVec2(-1, 30)))
+        {
+            auto& engine = Application::Get().GetEngine();
+            auto now = std::chrono::system_clock::now();
+            auto time_t = std::chrono::system_clock::to_time_t(now);
+            std::stringstream ss;
+            ss << "high_res_frame_16k_" << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S") << ".png";
+            engine.ExportHighResFrame(ss.str(), 16384, 12288);
+        }
         
         ImGui::Spacing();
         

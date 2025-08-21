@@ -17,3 +17,6 @@
 [submodule "Vendor/json"]
 	path = Vendor/json
 	url = https://github.com/nlohmann/json.git
+[submodule "Vendor/stb"]
+	path = Vendor/stb
+	url = https://github.com/nothings/stb.git

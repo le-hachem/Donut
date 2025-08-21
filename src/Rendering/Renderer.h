@@ -3,6 +3,7 @@
 #include "Core/Memory.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Framebuffer.h"
 
 #include <glm/glm.hpp>
 
@@ -41,6 +42,8 @@ namespace Donut
         virtual void BindImageTexture(uint32_t textureID, 
                                       uint32_t slot = 0, 
                                       bool readOnly = false)              = 0;
+        virtual void ReadPixels(uint32_t x, uint32_t y, uint32_t width, uint32_t height, 
+                                uint32_t format, uint32_t type, void* pixels) = 0;
 
         inline static API GetAPI()         { return s_API; }
         inline static void SetAPI(API api) { s_API = api;  }
@@ -120,6 +123,12 @@ namespace Donut
         inline static void BindImageTexture(uint32_t textureID, uint32_t slot = 0, bool readOnly = false)
         {
             s_RendererAPI->BindImageTexture(textureID, slot, readOnly);
+        }
+
+        inline static void ReadPixels(uint32_t x, uint32_t y, uint32_t width, uint32_t height, 
+                                      uint32_t format, uint32_t type, void* pixels)
+        {
+            s_RendererAPI->ReadPixels(x, y, width, height, format, type, pixels);
         }
 
     private:
