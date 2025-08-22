@@ -51,12 +51,22 @@ namespace Donut
                     s_Settings.simulation.maxStepsStatic    = toml::find_or(sim, "max_steps_static",    15000);
                     s_Settings.simulation.earlyExitDistance = toml::find_or(sim, "early_exit_distance", 5e12f);
                     s_Settings.simulation.gravityEnabled    = toml::find_or(sim, "gravity_enabled",     true);
+                    s_Settings.simulation.diskThickness     = toml::find_or(sim, "disk_thickness",      0.1f);
+                    s_Settings.simulation.diskDensity       = toml::find_or(sim, "disk_density",        0.1f);
+                    s_Settings.simulation.rotationSpeed     = toml::find_or(sim, "rotation_speed",      1.0f);
+                    s_Settings.simulation.blurStrength      = toml::find_or(sim, "blur_strength",       2.0f);
+                    s_Settings.simulation.glowIntensity     = toml::find_or(sim, "glow_intensity",      0.1f);
                     
                     s_Settings.simulation.targetFPS         = std::max(30,    std::min(120,   s_Settings.simulation.targetFPS));
                     s_Settings.simulation.computeHeight     = std::max(64,    std::min(2048,  s_Settings.simulation.computeHeight));
                     s_Settings.simulation.maxStepsMoving    = std::max(1000,  std::min(60000, s_Settings.simulation.maxStepsMoving));
                     s_Settings.simulation.maxStepsStatic    = std::max(1000,  std::min(30000, s_Settings.simulation.maxStepsStatic));
                     s_Settings.simulation.earlyExitDistance = std::max(1e11f, std::min(1e13f, s_Settings.simulation.earlyExitDistance));
+                    s_Settings.simulation.diskThickness     = std::max(0.01f, std::min(5.0f,  s_Settings.simulation.diskThickness));
+                    s_Settings.simulation.diskDensity       = std::max(0.01f, std::min(5.0f,  s_Settings.simulation.diskDensity));
+                    s_Settings.simulation.rotationSpeed     = std::max(0.0f,  std::min(5.0f,  s_Settings.simulation.rotationSpeed));
+                    s_Settings.simulation.blurStrength      = std::max(0.1f,  std::min(10.0f, s_Settings.simulation.blurStrength));
+                    s_Settings.simulation.glowIntensity     = std::max(0.01f, std::min(5.0f,  s_Settings.simulation.glowIntensity));
                 }
                 
                 if (config.contains("graphics"))
@@ -111,7 +121,12 @@ namespace Donut
                 {"max_steps_moving",    s_Settings.simulation.maxStepsMoving   },
                 {"max_steps_static",    s_Settings.simulation.maxStepsStatic   },
                 {"early_exit_distance", s_Settings.simulation.earlyExitDistance},
-                {"gravity_enabled",     s_Settings.simulation.gravityEnabled   }
+                {"gravity_enabled",     s_Settings.simulation.gravityEnabled   },
+                {"disk_thickness",      s_Settings.simulation.diskThickness    },
+                {"disk_density",        s_Settings.simulation.diskDensity      },
+                {"rotation_speed",      s_Settings.simulation.rotationSpeed    },
+                {"blur_strength",       s_Settings.simulation.blurStrength     },
+                {"glow_intensity",      s_Settings.simulation.glowIntensity    }
             };
             
             toml::value graphics = toml::table
@@ -168,6 +183,11 @@ namespace Donut
         s_Settings.simulation.maxStepsStatic    = 15000;
         s_Settings.simulation.earlyExitDistance = 5e12f;
         s_Settings.simulation.gravityEnabled    = true;
+        s_Settings.simulation.diskThickness     = 0.1f;
+        s_Settings.simulation.diskDensity       = 0.1f;
+        s_Settings.simulation.rotationSpeed     = 1.0f;
+        s_Settings.simulation.blurStrength      = 2.0f;
+        s_Settings.simulation.glowIntensity     = 0.1f;
         
         s_Settings.graphics.renderAPI              = "OpenGL";
         s_Settings.graphics.vSyncEnabled           = true;

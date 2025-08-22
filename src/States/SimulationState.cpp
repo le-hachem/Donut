@@ -27,6 +27,13 @@ namespace Donut
         engine.SetEarlyExitDistance(settings.simulation.earlyExitDistance);
         engine.GetGravity() = settings.simulation.gravityEnabled;
         
+        // Load accretion disk settings
+        engine.SetDiskThickness(settings.simulation.diskThickness);
+        engine.SetDiskDensity(settings.simulation.diskDensity);
+        engine.SetRotationSpeed(settings.simulation.rotationSpeed);
+        engine.SetBlurStrength(settings.simulation.blurStrength);
+        engine.SetGlowIntensity(settings.simulation.glowIntensity);
+        
         engine.UpdateComputeDimensions();
         m_Initialized = true;
     }
@@ -227,6 +234,9 @@ namespace Donut
         if (ImGui::SliderFloat("Cloud Thickness", &diskThickness, 0.1f, 2.0f, "%.2f"))
         {
             engine.SetDiskThickness(diskThickness);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.diskThickness = diskThickness;
+            SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Thickness relative to Schwarzschild radius");
         
@@ -234,6 +244,9 @@ namespace Donut
         if (ImGui::SliderFloat("Cloud Density", &diskDensity, 0.1f, 3.0f, "%.2f"))
         {
             engine.SetDiskDensity(diskDensity);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.diskDensity = diskDensity;
+            SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Overall density multiplier");
         
@@ -241,6 +254,9 @@ namespace Donut
         if (ImGui::SliderFloat("Rotation Speed", &rotationSpeed, 0.0f, 3.0f, "%.2f"))
         {
             engine.SetRotationSpeed(rotationSpeed);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.rotationSpeed = rotationSpeed;
+            SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Rotation speed multiplier (0 = no rotation)");
         
@@ -248,6 +264,9 @@ namespace Donut
         if (ImGui::SliderFloat("Blur Strength", &blurStrength, 0.5f, 5.0f, "%.2f"))
         {
             engine.SetBlurStrength(blurStrength);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.blurStrength = blurStrength;
+            SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Blur radius for glow effect");
         
@@ -255,6 +274,9 @@ namespace Donut
         if (ImGui::SliderFloat("Glow Intensity", &glowIntensity, 0.1f, 3.0f, "%.2f"))
         {
             engine.SetGlowIntensity(glowIntensity);
+            SimulationSettings settings = SettingsManager::GetSettingsConst().simulation;
+            settings.glowIntensity = glowIntensity;
+            SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Intensity of the glow effect");
         
