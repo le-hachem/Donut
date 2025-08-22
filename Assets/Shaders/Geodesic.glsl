@@ -2,6 +2,7 @@
 layout(local_size_x = 16, local_size_y = 16) in;
 
 layout(binding = 0, rgba8) writeonly uniform image2D outImage;
+layout(binding = 5) uniform samplerCube u_HDRIEnvironment;
 layout(std140, binding = 1) uniform Camera 
 {
     vec3  camPos;     float _pad0;
@@ -54,6 +55,11 @@ const float STEP_ADAPTATION_FACTOR = 1.5;
 vec4 objectColor = vec4(0.0);
 vec3 hitCenter = vec3(0.0);
 float hitRadius = 0.0;
+
+vec3 SampleHDRI(vec3 direction)
+{
+    return texture(u_HDRIEnvironment, direction).rgb;
+}
 
 float hash(float p) 
 {
@@ -472,7 +478,11 @@ void main()
         color = vec4(shaded, objectColor.a);
         color = mix(accumulatedColor, color, color.a);
     } else
-        color = accumulatedColor;
+    {
+        vec3 rayDirection = normalize(vec3(ray.x, ray.y, ray.z) - cam.camPos);
+        vec3 hdriColor = SampleHDRI(rayDirection);
+        color  = vec4(mix(accumulatedColor.rgb, hdriColor, 1.0 - accumulatedColor.a), 1.0);
+    }
 
     imageStore(outImage, pix, color);
 }

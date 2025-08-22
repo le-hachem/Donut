@@ -2,6 +2,7 @@
 
 #include "Core/Application.h"
 #include "Core/Window.h"
+#include "Core/HDRIManager.h"
 
 #include "Rendering/Renderer.h"
 #include "Rendering/Shader.h"
@@ -23,6 +24,7 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
+#include <vector>
 
 namespace Donut
 {
@@ -42,13 +44,29 @@ namespace Donut
         m_Camera.SetElevation(static_cast<float>(std::numbers::pi) / 3.0f);
         m_Camera.UpdateOrbital();
         
-        // Initialize rendering resources once
         m_SphereShader = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
-        InitializeSphereGeometry();
+        m_SkyboxShader = Ref<Shader>(Shader::Create("Assets/Shaders/Skybox.glsl"));
         
-        // Initialize the black hole at the center
-        Material blackHoleMaterial(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f); // Pure black, no specular, no emission
-        m_BlackHole = Object(glm::vec3(0.0f, 0.0f, 0.0f), 2.0f, blackHoleMaterial); // Position at origin, radius 2
+        if (!m_SphereShader)
+            DONUT_ERROR("Failed to create sphere shader");
+        if (!m_SkyboxShader)
+            DONUT_ERROR("Failed to create skybox shader");
+        
+        InitializeSphereGeometry();
+        InitializeSkyboxGeometry();
+        
+        auto& hdriManager = HDRIManager::Get();
+        m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+        if (!m_HDRIEnvironment)
+        {
+            hdriManager.SetCurrentHDRI("Assets/HDRI/HDR_blue_nebulae-1.hdr");
+            m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+            if (!m_HDRIEnvironment)
+                DONUT_WARN("Failed to load default HDRI for WorldBuilder, using fallback");
+        }
+        
+        Material blackHoleMaterial(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f);
+        m_BlackHole = Object(glm::vec3(0.0f, 0.0f, 0.0f), 2.0f, blackHoleMaterial);
         m_BlackHoleInitialized = true;
         
         m_Initialized = true;
@@ -90,8 +108,15 @@ namespace Donut
     
     void WorldBuilderState::OnRender()
     {
+        auto& hdriManager = HDRIManager::Get();
+        m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+        
         RenderCommand::SetClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
         RenderCommand::Clear();
+        
+        if (m_HDRIEnvironment)
+            RenderSkybox();
+        
         RenderScene();
     }
     
@@ -347,7 +372,6 @@ namespace Donut
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "New Sphere");
             ImGui::Separator();
             
-            // Show object count and limit
             ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.8f, 1.0f), "Objects: %zu/16", m_Scene.objs.size());
             
             ImGui::Text("Position:");
@@ -367,7 +391,6 @@ namespace Donut
             
             ImGui::Spacing();
             
-            // Disable button if object limit reached
             if (m_Scene.objs.size() >= 16)
             {
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -468,6 +491,44 @@ namespace Donut
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "White rim around sphere silhouette");
         }
+
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("HDRI Environment", nullptr))
+        {
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "HDRI Settings:");
+
+            static int selectedHDRI = 0;
+            ImGui::PushID("WorldBuilderHDRI");
+            auto& hdriManager = HDRIManager::Get();
+            const auto& availableHDRI = hdriManager.GetAvailableHDRI();
+            
+            static std::vector<std::string> hdriOptionNames;
+            static std::vector<const char*> hdriOptions;
+            
+            if (hdriOptionNames.size() != availableHDRI.size())
+            {
+                hdriOptionNames.clear();
+                hdriOptions.clear();
+                
+                for (const auto& path : availableHDRI)
+                {
+                    hdriOptionNames.push_back(hdriManager.GetHDRIName(path));
+                    hdriOptions.push_back(hdriOptionNames.back().c_str());
+                }
+            }
+
+            if (ImGui::Combo("HDRI Environment", &selectedHDRI, hdriOptions.data(), static_cast<int>(hdriOptions.size())))
+            {
+                auto& hdriManager = HDRIManager::Get();
+                hdriManager.SetCurrentHDRI(availableHDRI[selectedHDRI]);
+                m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+            }
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "HDRI provides background skybox and lighting for the scene");
+            ImGui::PopID();
+        }
         
         ImGui::Spacing();
         ImGui::Separator();
@@ -486,11 +547,8 @@ namespace Donut
         
         if (ImGui::Button("Start Simulation", ImVec2(ImGui::GetWindowWidth() - 20, 30)))
         {
-            // Load objects from WorldBuilder scene into Engine
             auto& engine = Application::Get().GetEngine();
             engine.LoadObjectsFromScene(m_Scene.objs);
-            
-            // Switch to simulation state
             Application::Get().GetStateManager().SwitchToState("Simulation");
         }
         
@@ -551,7 +609,6 @@ namespace Donut
     
     void WorldBuilderState::AddSphere()
     {
-        // Check if we've reached the object limit (16 objects)
         if (m_Scene.objs.size() >= 16)
         {
             DONUT_WARN("Cannot add more objects. Maximum of 16 objects reached.");
@@ -768,6 +825,12 @@ namespace Donut
         m_SphereShader->SetFloat3("u_OutlineColor", m_OutlineColor);
         m_SphereShader->SetFloat("u_OutlineWidth",  m_OutlineWidth);
         
+        if (m_HDRIEnvironment)
+        {
+            m_HDRIEnvironment->Bind(1);
+            m_SphereShader->SetInt("u_HDRIEnvironment", 1);
+        }
+        
         if (m_BlackHoleInitialized)
         {
             glm::mat4 blackHoleTransform = glm::translate(glm::mat4(1.0f), m_BlackHole.m_Centre);
@@ -817,5 +880,95 @@ namespace Donut
         }
         
         RenderCommand::DisableDepthTest();
+    }
+    
+
+    
+    void WorldBuilderState::InitializeSkyboxGeometry()
+    {
+        float skyboxVertices[] = 
+        {
+            -1.0f,  1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f, -1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+
+            -1.0f, -1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f,  1.0f,
+
+            -1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f,  1.0f,
+             1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f,  1.0f,
+            -1.0f,  1.0f, -1.0f,
+
+            -1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+             1.0f, -1.0f, -1.0f,
+             1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f,  1.0f,
+             1.0f, -1.0f,  1.0f
+        };
+
+        auto vertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(skyboxVertices, sizeof(skyboxVertices)));
+        VertexBufferLayout layout;
+        layout.Push<float>(3);
+        vertexBuffer->SetLayout(layout);
+
+        m_SkyboxVAO = Ref<VertexArray>(VertexArray::Create());
+        m_SkyboxVAO->AddVertexBuffer(vertexBuffer);
+    }
+    
+    void WorldBuilderState::RenderSkybox()
+    {
+        if (!m_SkyboxShader || !m_SkyboxVAO || !m_HDRIEnvironment)
+        {
+            return;
+        }
+        
+        GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        RenderCommand::SetViewport(0, 0, width, height);
+        RenderCommand::DisableDepthTest();
+        
+        glm::mat4 view = m_Camera.GetViewMatrix();
+        glm::mat4 projection = m_Camera.GetProjectionMatrix();
+        
+        view = glm::mat4(glm::mat3(view));
+        
+        m_SkyboxShader->Bind();
+        m_SkyboxShader->SetMat4("u_View", view);
+        m_SkyboxShader->SetMat4("u_Projection", projection);
+        
+        m_HDRIEnvironment->Bind(0);
+        m_SkyboxShader->SetInt("u_Skybox", 0);
+        
+        m_SkyboxVAO->Bind();
+        RenderCommand::DrawArrays(36);
+        
+        RenderCommand::EnableDepthTest();
     }
 };

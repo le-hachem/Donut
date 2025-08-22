@@ -101,30 +101,34 @@ namespace Donut
         void  SetMaxStepsStatic(int steps) { m_MaxStepsStatic = steps; }
         void  SetEarlyExitDistance(float distance) { m_EarlyExitDistance = distance; }
         
-        float GetDiskThickness() const { return m_DiskThickness; }
+        float GetDiskThickness()         const  { return m_DiskThickness;      }
         void  SetDiskThickness(float thickness) { m_DiskThickness = thickness; }
         
-        float GetDiskDensity() const { return m_DiskDensity; }
-        void  SetDiskDensity(float density) { m_DiskDensity = density; }
+        float GetDiskDensity()            const { return m_DiskDensity;    }
+        void  SetDiskDensity(float density)     { m_DiskDensity = density; }
         
-        float GetRotationSpeed() const { return m_RotationSpeed; }
-        void  SetRotationSpeed(float speed) { m_RotationSpeed = speed; }
+        float GetRotationSpeed()          const { return m_RotationSpeed;  }
+        void  SetRotationSpeed(float speed)     { m_RotationSpeed = speed; }
         
-        float GetBlurStrength() const { return m_BlurStrength; }
-        void  SetBlurStrength(float strength) { m_BlurStrength = strength; }
+        float GetBlurStrength()           const { return m_BlurStrength;     }
+        void  SetBlurStrength(float strength)   { m_BlurStrength = strength; }
         
-        float GetGlowIntensity() const { return m_GlowIntensity; }
+        float GetGlowIntensity()          const { return m_GlowIntensity;      }
         void  SetGlowIntensity(float intensity) { m_GlowIntensity = intensity; }
         
         void LoadObjectsFromScene(const std::vector<Donut::Object>& objects);
         void ExportHighResFrame(const std::string& filename, int width = 4096, int height = 3072);
         void PrintObjectInfo() const;
+        
+        void SetHDRIEnvironment(Ref<CubemapTexture> hdri) { m_HDRIEnvironment = hdri; }
+        Ref<CubemapTexture> GetHDRIEnvironment()    const { return m_HDRIEnvironment; }
     private:
         Ref<Shader> CreateComputeProgram(const char* path);
         std::pair<Ref<VertexArray>, Ref<Texture2D>> QuadVAO();
     private:
         Ref<VertexArray>   m_QuadVAO;
         Ref<Texture2D>     m_Texture;
+        Ref<CubemapTexture> m_HDRIEnvironment;
         Ref<Shader>        m_ShaderProgram;
         Ref<Shader>        m_ComputeProgram;
         Ref<Shader>        m_BlurShader;
@@ -135,8 +139,8 @@ namespace Donut
 
         int   m_Width;
         int   m_Height;
-        float m_Width_f = 100*10e10f;
-        float m_Height_f = 75*10e10f;
+        float m_Width_f = 100.0f*1e10f;
+        float m_Height_f = 75.0f*1e10f;
 
         int   m_TargetFPS     = 60;
         float m_CurrentFPS    = 60.0f;
@@ -150,9 +154,9 @@ namespace Donut
         
         int   m_MaxStepsMoving    = 60000;
         int   m_MaxStepsStatic    = 30000;
-        float m_EarlyExitDistance = 5e11f;
+        float m_EarlyExitDistance = 5.0e11f;
         
-        float m_DiskThickness = 0.1;    
+        float m_DiskThickness = 0.1f;    
         float m_DiskDensity   = 0.1f;
         float m_RotationSpeed = 1.0f;
         float m_BlurStrength  = 2.0f;

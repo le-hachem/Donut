@@ -47,6 +47,10 @@ namespace Donut
         
         Ref<Shader>      m_SphereShader;
         Ref<VertexArray> m_SphereVAO;
+        Ref<CubemapTexture> m_HDRIEnvironment;
+        
+        Ref<Shader>      m_SkyboxShader;
+        Ref<VertexArray> m_SkyboxVAO;
         
         glm::vec3 m_NewObjectPosition = glm::vec3(0.0f, 0.0f, 0.0f);
         float     m_NewObjectRadius   = 1.0f;
@@ -72,5 +76,11 @@ namespace Donut
         
         Object m_BlackHole;
         bool   m_BlackHoleInitialized = false;
+        
+        void SetHDRIEnvironment(Ref<CubemapTexture> hdri) { m_HDRIEnvironment = hdri; }
+        Ref<CubemapTexture> GetHDRIEnvironment()    const { return m_HDRIEnvironment; }
+        
+        void InitializeSkyboxGeometry();
+        void RenderSkybox();
     };
 };

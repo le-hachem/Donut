@@ -42,7 +42,6 @@ namespace Donut
         bool m_ShowDebugInfo = false;
         bool m_EnableAntiAliasing = true;
         
-        // Theme settings
         int m_SelectedTheme = 0; // 0=Dark, 1=Light, 2=Blue
     };
 };

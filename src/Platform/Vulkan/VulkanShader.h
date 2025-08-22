@@ -32,6 +32,7 @@ namespace Donut
 		virtual void MemoryBarrier(uint32_t barriers)                     override;
 
 		virtual const std::string& GetName() const override { return m_Name; }
+	virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
 		void UploadUniformInt(const std::string& name, int value);
 		void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);

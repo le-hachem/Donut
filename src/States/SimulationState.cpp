@@ -1,6 +1,7 @@
 #include "SimulationState.h"
 #include "Rendering/Renderer.h"
 #include "Core/Application.h"
+#include "Core/HDRIManager.h"
 #include "Core/Window.h"
 #include "Core/Event.h"
 #include "Core/SettingsManager.h"
@@ -10,6 +11,7 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <vector>
 
 namespace Donut
 {
@@ -27,7 +29,6 @@ namespace Donut
         engine.SetEarlyExitDistance(settings.simulation.earlyExitDistance);
         engine.GetGravity() = settings.simulation.gravityEnabled;
         
-        // Load accretion disk settings
         engine.SetDiskThickness(settings.simulation.diskThickness);
         engine.SetDiskDensity(settings.simulation.diskDensity);
         engine.SetRotationSpeed(settings.simulation.rotationSpeed);
@@ -166,9 +167,7 @@ namespace Donut
         ImGui::Text("Objects: %zu", engine.GetObjects().size());
         
         if (ImGui::Button("Print Object Info"))
-        {
             engine.PrintObjectInfo();
-        }
         
         int computeHeight = engine.GetComputeHeight();
         if (ImGui::SliderInt("Compute Height", &computeHeight, 64, 2048))
@@ -279,6 +278,40 @@ namespace Donut
             SettingsManager::SetSimulationSettings(settings);
         }
         ImGui::TextDisabled("Intensity of the glow effect");
+        
+        ImGui::Spacing();
+        
+        ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "HDRI Environment");
+        ImGui::Separator();
+        
+        static int selectedHDRI = 0;
+        ImGui::PushID("SimulationHDRI");
+        auto& hdriManager = HDRIManager::Get();
+        const auto& availableHDRI = hdriManager.GetAvailableHDRI();
+        
+        static std::vector<std::string> hdriOptionNames;
+        static std::vector<const char*> hdriOptions;
+        
+        if (hdriOptionNames.size() != availableHDRI.size())
+        {
+            hdriOptionNames.clear();
+            hdriOptions.clear();
+            
+            for (const auto& path : availableHDRI)
+            {
+                hdriOptionNames.push_back(hdriManager.GetHDRIName(path));
+                hdriOptions.push_back(hdriOptionNames.back().c_str());
+            }
+        }
+
+        if (ImGui::Combo("HDRI Environment", &selectedHDRI, hdriOptions.data(), static_cast<int>(hdriOptions.size())))
+        {
+            auto& hdriManager = HDRIManager::Get();
+            hdriManager.SetCurrentHDRI(availableHDRI[selectedHDRI]);
+            engine.SetHDRIEnvironment(hdriManager.GetCurrentHDRI());
+        }
+        ImGui::TextDisabled("HDRI provides background and lighting for the simulation");
+        ImGui::PopID();
         
         ImGui::Spacing();
         

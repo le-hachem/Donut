@@ -33,6 +33,7 @@ uniform vec3  u_CameraPos;
 uniform int   u_IsSelected;
 uniform vec3  u_OutlineColor;
 uniform float u_OutlineWidth;
+uniform samplerCube u_HDRIEnvironment;
 
 out vec4 o_FragColor;
 
@@ -43,10 +44,14 @@ void main()
     vec3 viewDir    = normalize(u_CameraPos - v_WorldPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     
+    // HDRI lighting
+    vec3 hdriLight = texture(u_HDRIEnvironment, normal).rgb;
+    float hdriIntensity = 0.3; // Adjust this for HDRI lighting strength
+    
     float diff = max(dot(normal, lightDir), 0.0);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     
-    vec3 diffuse  = u_Color * diff;
+    vec3 diffuse  = u_Color * (diff + hdriIntensity * hdriLight);
     vec3 specular = vec3(u_Specular) * spec;
     vec3 emission = u_Color * u_Emission;
     

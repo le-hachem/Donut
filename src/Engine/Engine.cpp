@@ -10,6 +10,7 @@
 
 #include "Engine.h"
 #include "Core/Log.h"
+#include "Core/HDRIManager.h"
 #include "Rendering/VertexBuffer.h"
 #include "Rendering/IndexBuffer.h"
 
@@ -36,15 +37,25 @@ namespace Donut
         m_ComputeProgram = CreateComputeProgram("Assets/Shaders/Geodesic.glsl");
         m_BlurShader     = Ref<Shader>(Shader::Create("Assets/Shaders/Blur.glsl"));
         
+        auto& hdriManager = HDRIManager::Get();
+        m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+        if (!m_HDRIEnvironment)
+        {
+            hdriManager.SetCurrentHDRI("Assets/HDRI/HDR_blue_nebulae-1.hdr");
+            m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+            if (!m_HDRIEnvironment)
+                DONUT_WARN("Failed to load default HDRI, using fallback");
+        }
+        
         m_CameraUBO = UniformBuffer::Create(128, 1);
-        m_DiskUBO   = UniformBuffer::Create(sizeof(float) * 5, 2);  // Added density parameter
+        m_DiskUBO   = UniformBuffer::Create(sizeof(float) * 5, 2);
         
         uint32_t objUBOSize = sizeof(int) + 3 * sizeof(float)
             + 16 * (sizeof(glm::vec4) + sizeof(glm::vec4))
             + 16 * sizeof(float);
         m_ObjectsUBO = UniformBuffer::Create(objUBOSize, 3);
         
-        m_SimulationUBO = UniformBuffer::Create(sizeof(int) * 2 + sizeof(float) * 2, 4); // time added to existing float
+        m_SimulationUBO = UniformBuffer::Create(sizeof(int) * 2 + sizeof(float) * 2, 4);
 
         auto result = QuadVAO();
         m_QuadVAO = result.first;
@@ -117,6 +128,9 @@ namespace Donut
 
     void Engine::DispatchCompute(const Camera& cam)
     {
+        auto& hdriManager = HDRIManager::Get();
+        m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
+        
         int cw = GetComputeWidth();
         int ch = m_ComputeHeight;
 
@@ -128,7 +142,10 @@ namespace Donut
         UploadObjectsUBO(m_Objects);
         UploadSimulationUBO();
         m_Texture->BindAsImage(0, false);
-
+        
+        if (m_HDRIEnvironment)
+            m_HDRIEnvironment->Bind(5);
+        
         uint32_t groupsX = static_cast<uint32_t>(std::ceil(cw / 16.0f));
         uint32_t groupsY = static_cast<uint32_t>(std::ceil(ch / 16.0f));
         m_ComputeProgram->Dispatch(groupsX, groupsY, 1);
@@ -509,4 +526,5 @@ namespace Donut
         
         RenderCommand::SetViewport(0, 0, originalWidth, originalHeight);
     }
+    
 }

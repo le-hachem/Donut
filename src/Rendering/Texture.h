@@ -31,4 +31,12 @@ namespace Donut
         static Ref<Texture2D> Create(uint32_t width, uint32_t height);
         static Ref<Texture2D> Create(const std::string& path);
     };
+
+    class CubemapTexture
+        : public Texture
+    {
+    public:
+        static Ref<CubemapTexture> Create(uint32_t width, uint32_t height);
+        static Ref<CubemapTexture> CreateFromHDRI(const std::string& path);
+    };
 };

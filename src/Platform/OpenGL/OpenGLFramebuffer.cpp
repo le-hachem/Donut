@@ -123,7 +123,6 @@ namespace Donut
 
         bool multisample = m_Specification.Samples > 1;
 
-        // Attachments
         if (m_ColorAttachmentSpecifications.size())
         {
             m_ColorAttachments.resize(m_ColorAttachmentSpecifications.size());
