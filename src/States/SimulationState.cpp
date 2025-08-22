@@ -60,7 +60,7 @@ namespace Donut
         RenderCommand::SetViewport(0, 0, static_cast<uint32_t>(engine.GetWidth()), static_cast<uint32_t>(engine.GetHeight()));
 
         engine.DispatchCompute(engine.GetCamera());
-        engine.DrawFullScreenQuad();
+        engine.DrawBlurPass();
     }
     
     void SimulationState::OnEvent(Event& event)
@@ -243,6 +243,20 @@ namespace Donut
             engine.SetRotationSpeed(rotationSpeed);
         }
         ImGui::TextDisabled("Rotation speed multiplier (0 = no rotation)");
+        
+        float blurStrength = engine.GetBlurStrength();
+        if (ImGui::SliderFloat("Blur Strength", &blurStrength, 0.5f, 5.0f, "%.2f"))
+        {
+            engine.SetBlurStrength(blurStrength);
+        }
+        ImGui::TextDisabled("Blur radius for glow effect");
+        
+        float glowIntensity = engine.GetGlowIntensity();
+        if (ImGui::SliderFloat("Glow Intensity", &glowIntensity, 0.1f, 3.0f, "%.2f"))
+        {
+            engine.SetGlowIntensity(glowIntensity);
+        }
+        ImGui::TextDisabled("Intensity of the glow effect");
         
         ImGui::Spacing();
         

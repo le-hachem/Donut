@@ -66,6 +66,7 @@ namespace Donut
         ~Engine() = default;
 
         void DrawFullScreenQuad();
+        void DrawBlurPass();
         void DispatchCompute(const Camera& cam);
         void UploadCameraUBO(const Camera& cam);
         void UploadObjectsUBO(const std::vector<ObjectData>& objs);
@@ -109,6 +110,12 @@ namespace Donut
         float GetRotationSpeed() const { return m_RotationSpeed; }
         void  SetRotationSpeed(float speed) { m_RotationSpeed = speed; }
         
+        float GetBlurStrength() const { return m_BlurStrength; }
+        void  SetBlurStrength(float strength) { m_BlurStrength = strength; }
+        
+        float GetGlowIntensity() const { return m_GlowIntensity; }
+        void  SetGlowIntensity(float intensity) { m_GlowIntensity = intensity; }
+        
         void LoadObjectsFromScene(const std::vector<Donut::Object>& objects);
         void ExportHighResFrame(const std::string& filename, int width = 4096, int height = 3072);
         void PrintObjectInfo() const;
@@ -120,6 +127,7 @@ namespace Donut
         Ref<Texture2D>     m_Texture;
         Ref<Shader>        m_ShaderProgram;
         Ref<Shader>        m_ComputeProgram;
+        Ref<Shader>        m_BlurShader;
         Ref<UniformBuffer> m_CameraUBO;
         Ref<UniformBuffer> m_DiskUBO;
         Ref<UniformBuffer> m_ObjectsUBO;
@@ -145,7 +153,9 @@ namespace Donut
         float m_EarlyExitDistance = 5e11f;
         
         float m_DiskThickness = 0.1;    
-        float m_DiskDensity   = 1.2f;
+        float m_DiskDensity   = 0.1f;
         float m_RotationSpeed = 1.0f;
+        float m_BlurStrength  = 2.0f;
+        float m_GlowIntensity = 0.1f;
     };
 };

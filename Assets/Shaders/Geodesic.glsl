@@ -323,7 +323,11 @@ vec4 SampleDiskColor(vec3 pos)
     float brightness_medium = fbm(rotated_brightness_pos * 5.0, 2);
     float brightness_small = fbm(rotated_brightness_pos * 7.0, 2);
     float brightness_noise = (brightness_large * 0.6 + brightness_medium * 0.3 + brightness_small * 0.1);
-    float brightness = 1.0 + density * 1.0 + brightness_noise * 0.4;
+    
+    // Enhanced brightness with glow effect
+    float baseBrightness = 1.0 + density * 1.5; // Increased density contribution
+    float glowBrightness = brightness_noise * 0.8; // Enhanced noise contribution
+    float brightness = baseBrightness + glowBrightness;
     
     return vec4(baseColor * brightness, density);
 }
@@ -413,14 +417,21 @@ void main()
             vec3 diskColor = diskSample.rgb;
             
             float stepLength = currentStepSize * 1e-8;
-            float absorption = density * stepLength * 1.2;
-            float scattering = density * stepLength * 0.8;
+            
+            float absorption = density * stepLength * 0.8;
+            float scattering = density * stepLength * 1.5;
             float extinction = absorption + scattering;
             
             float stepTransmittance = exp(-extinction);
             
-            vec3 emission = diskColor * density * stepLength * 2.5 * sqrt(disk_density);
-            accumulatedColor.rgb += emission * transmittance;
+            vec3 emission = diskColor * density * stepLength * 4.0 * sqrt(disk_density);
+            
+            vec3 glowColor       = mix(diskColor, vec3(1.0, 0.8, 0.6), 0.3);
+            float glowIntensity  = density * stepLength * 2.0;
+            vec3 atmosphericGlow = glowColor * glowIntensity * 0.8;
+            
+            vec3 totalEmission = emission + atmosphericGlow;
+            accumulatedColor.rgb += totalEmission * transmittance;
             
             transmittance *= stepTransmittance;
             

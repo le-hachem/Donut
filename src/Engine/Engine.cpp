@@ -34,6 +34,7 @@ namespace Donut
 
         m_ShaderProgram  = Ref<Shader>(Shader::Create("Assets/Shaders/ComputeTextureQuad.glsl"));
         m_ComputeProgram = CreateComputeProgram("Assets/Shaders/Geodesic.glsl");
+        m_BlurShader     = Ref<Shader>(Shader::Create("Assets/Shaders/Blur.glsl"));
         
         m_CameraUBO = UniformBuffer::Create(128, 1);
         m_DiskUBO   = UniformBuffer::Create(sizeof(float) * 5, 2);  // Added density parameter
@@ -90,6 +91,24 @@ namespace Donut
 
         m_Texture->Bind(0);
         m_ShaderProgram->SetInt("u_ScreenTexture", 0);
+
+        RenderCommand::DisableDepthTest();
+        RenderCommand::DrawArrays(6);
+        RenderCommand::EnableDepthTest();
+    }
+
+    void Engine::DrawBlurPass()
+    {
+        RenderCommand::SetViewport(0, 0, m_Width, m_Height);
+        
+        m_BlurShader->Bind();
+        m_QuadVAO->Bind();
+
+        m_Texture->Bind(0);
+        m_BlurShader->SetInt("u_ScreenTexture", 0);
+        m_BlurShader->SetFloat2("u_Resolution", glm::vec2(m_Width, m_Height));
+        m_BlurShader->SetFloat("u_BlurStrength", m_BlurStrength);
+        m_BlurShader->SetFloat("u_GlowIntensity", m_GlowIntensity);
 
         RenderCommand::DisableDepthTest();
         RenderCommand::DrawArrays(6);
