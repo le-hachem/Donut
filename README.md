@@ -28,6 +28,17 @@ A real-time black hole ray tracer that simulates the visual effects of gravitati
 
 Donut is a real-time black hole ray tracer that simulates the visual effects of gravitational lensing around Sagittarius A* (Sgr A*), the supermassive black hole at the center of our galaxy. The application renders images of how light would bend and distort as it passes near the black hole's intense gravitational field.
 
+## Screenshots
+
+![Black Hole with Accretion Disk](Branding/Export.png)
+
+*Real-time rendering of Sagittarius A* with volumetric accretion disk, featuring:*
+- **Gravitational lensing** effects around the black hole
+- **Volumetric cloud-like accretion disk** with realistic density variations
+- **Dynamic rotation** with Keplerian orbital motion
+- **Emission-based glow** with atmospheric scattering
+- **High-quality 3D noise** for natural cloud patterns
+
 ## Key Features
 
 - **Real-time Rendering**: GPU-accelerated compute shader implementation
