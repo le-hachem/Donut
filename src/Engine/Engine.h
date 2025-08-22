@@ -100,6 +100,15 @@ namespace Donut
         void  SetMaxStepsStatic(int steps) { m_MaxStepsStatic = steps; }
         void  SetEarlyExitDistance(float distance) { m_EarlyExitDistance = distance; }
         
+        float GetDiskThickness() const { return m_DiskThickness; }
+        void  SetDiskThickness(float thickness) { m_DiskThickness = thickness; }
+        
+        float GetDiskDensity() const { return m_DiskDensity; }
+        void  SetDiskDensity(float density) { m_DiskDensity = density; }
+        
+        float GetRotationSpeed() const { return m_RotationSpeed; }
+        void  SetRotationSpeed(float speed) { m_RotationSpeed = speed; }
+        
         void LoadObjectsFromScene(const std::vector<Donut::Object>& objects);
         void ExportHighResFrame(const std::string& filename, int width = 4096, int height = 3072);
         void PrintObjectInfo() const;
@@ -131,8 +140,12 @@ namespace Donut
         Camera                  m_Camera;
         bool                    m_Gravity = false;
         
-        int   m_MaxStepsMoving = 60000;
-        int   m_MaxStepsStatic = 30000;
+        int   m_MaxStepsMoving    = 60000;
+        int   m_MaxStepsStatic    = 30000;
         float m_EarlyExitDistance = 5e11f;
+        
+        float m_DiskThickness = 0.1;    
+        float m_DiskDensity   = 1.2f;
+        float m_RotationSpeed = 1.0f;
     };
 };

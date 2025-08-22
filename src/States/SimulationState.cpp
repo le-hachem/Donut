@@ -220,6 +220,32 @@ namespace Donut
         
         ImGui::Spacing();
         
+        ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Accretion Disk");
+        ImGui::Separator();
+        
+        float diskThickness = engine.GetDiskThickness();
+        if (ImGui::SliderFloat("Cloud Thickness", &diskThickness, 0.1f, 2.0f, "%.2f"))
+        {
+            engine.SetDiskThickness(diskThickness);
+        }
+        ImGui::TextDisabled("Thickness relative to Schwarzschild radius");
+        
+        float diskDensity = engine.GetDiskDensity();
+        if (ImGui::SliderFloat("Cloud Density", &diskDensity, 0.1f, 3.0f, "%.2f"))
+        {
+            engine.SetDiskDensity(diskDensity);
+        }
+        ImGui::TextDisabled("Overall density multiplier");
+        
+        float rotationSpeed = engine.GetRotationSpeed();
+        if (ImGui::SliderFloat("Rotation Speed", &rotationSpeed, 0.0f, 3.0f, "%.2f"))
+        {
+            engine.SetRotationSpeed(rotationSpeed);
+        }
+        ImGui::TextDisabled("Rotation speed multiplier (0 = no rotation)");
+        
+        ImGui::Spacing();
+        
         ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Camera");
         ImGui::Separator();
         

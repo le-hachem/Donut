@@ -36,14 +36,14 @@ namespace Donut
         m_ComputeProgram = CreateComputeProgram("Assets/Shaders/Geodesic.glsl");
         
         m_CameraUBO = UniformBuffer::Create(128, 1);
-        m_DiskUBO   = UniformBuffer::Create(sizeof(float) * 4, 2);
+        m_DiskUBO   = UniformBuffer::Create(sizeof(float) * 5, 2);  // Added density parameter
         
         uint32_t objUBOSize = sizeof(int) + 3 * sizeof(float)
             + 16 * (sizeof(glm::vec4) + sizeof(glm::vec4))
             + 16 * sizeof(float);
         m_ObjectsUBO = UniformBuffer::Create(objUBOSize, 3);
         
-        m_SimulationUBO = UniformBuffer::Create(sizeof(int) * 2 + sizeof(float) * 2, 4);
+        m_SimulationUBO = UniformBuffer::Create(sizeof(int) * 2 + sizeof(float) * 2, 4); // time added to existing float
 
         auto result = QuadVAO();
         m_QuadVAO = result.first;
@@ -177,8 +177,8 @@ namespace Donut
         float r1 = static_cast<float>(m_SagA.m_Rs * 2.2);
         float r2 = static_cast<float>(m_SagA.m_Rs * 5.2);
         float num = 2.0f;
-        float thickness = 1e9f;
-        float diskData[4] = { r1, r2, num, thickness };
+        float thickness = static_cast<float>(m_SagA.m_Rs * m_DiskThickness);
+        float diskData[5] = { r1, r2, num, thickness, m_DiskDensity };
 
         m_DiskUBO->SetData(diskData, sizeof(diskData));
         m_DiskUBO->Bind(2);
@@ -191,13 +191,13 @@ namespace Donut
             int maxStepsMoving;
             int maxStepsStatic;
             float earlyExitDistance;
-            int padding;
+            float time;
         } data;
 
         data.maxStepsMoving    = m_MaxStepsMoving;
         data.maxStepsStatic    = m_MaxStepsStatic;
         data.earlyExitDistance = m_EarlyExitDistance;
-        data.padding           = 0;
+        data.time              = static_cast<float>(glfwGetTime()) * m_RotationSpeed;
 
         m_SimulationUBO->SetData(&data, sizeof(data));
         m_SimulationUBO->Bind(4);
