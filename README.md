@@ -1,4 +1,6 @@
-# ğ”‡ğ”¬ğ”«ğ”²ğ”±
+![Logo](Branding/Logo-Black.jpg)
+
+# ?”‡?”¬?”«?”²?”±
 
 A real-time black hole ray tracer that simulates the visual effects of gravitational lensing around Sagittarius A* (Sgr A*).
 
@@ -34,6 +36,7 @@ Donut is a real-time black hole ray tracer that simulates the visual effects of 
 ![Black hole with HDRI](Branding/Screenshot2.png)
 
 *Real-time rendering of Sagittarius A* with volumetric accretion disk, featuring:*
+
 - **Gravitational lensing** effects around the black hole
 - **Volumetric cloud-like accretion disk** with realistic density variations
 - **Dynamic rotation** with Keplerian orbital motion
