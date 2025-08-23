@@ -30,7 +30,8 @@ Donut is a real-time black hole ray tracer that simulates the visual effects of 
 
 ## Screenshots
 
-![Black Hole with Accretion Disk](Branding/Export.png)
+![Black Hole with Accretion Disk](Branding/Screenshot1.png)
+![Black hole with HDRI](Branding/Screenshot2.png)
 
 *Real-time rendering of Sagittarius A* with volumetric accretion disk, featuring:*
 - **Gravitational lensing** effects around the black hole
