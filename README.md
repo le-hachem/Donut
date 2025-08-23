@@ -1,8 +1,5 @@
 ![Logo](Branding/Logo-Black.jpg)
-
-# ?”‡?”¬?”«?”²?”±
-
-A real-time black hole ray tracer that simulates the visual effects of gravitational lensing around Sagittarius A* (Sgr A*).
+A real-time black hole ray tracer.
 
 ## Table of Contents
 
