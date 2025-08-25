@@ -40,7 +40,8 @@ namespace Donut
         {
             "Assets/HDRI/HDR_blue_nebulae-1.hdr",
             "Assets/HDRI/HDR_subdued_blue_nebulae.hdr",
-            "Assets/HDRI/HDR_subdued_multi_nebulae.hdr"
+            "Assets/HDRI/HDR_subdued_multi_nebulae.hdr",
+            "Assets/HDRI/night_sky.hdr"
         };
     };
 };

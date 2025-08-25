@@ -48,6 +48,7 @@ Donut is a real-time black hole ray tracer that simulates the visual effects of 
 - **Adaptive Performance**: Dynamic step size adjustment for optimal performance
 - **Multiple Objects**: Support for rendering stars and other celestial bodies
 - **Configurable Parameters**: Extensive settings for simulation and graphics
+- **World Builder**: Interactive 3D scene editor with reference grid for spatial orientation
 
 ## System Requirements
 

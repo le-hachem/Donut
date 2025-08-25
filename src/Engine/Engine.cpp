@@ -33,8 +33,8 @@ namespace Donut
             { glm::vec4(0.00f, 0.00f, 0.00f, m_SagA.m_Rs), glm::vec4(0, 0, 0, 1), static_cast<float>(m_SagA.m_Mass) }
         };
 
-        m_ShaderProgram  = Ref<Shader>(Shader::Create("Assets/Shaders/ComputeTextureQuad.glsl"));
         m_ComputeProgram = CreateComputeProgram("Assets/Shaders/Geodesic.glsl");
+        m_ShaderProgram  = Ref<Shader>(Shader::Create("Assets/Shaders/TexturedQuad.glsl"));
         m_BlurShader     = Ref<Shader>(Shader::Create("Assets/Shaders/Blur.glsl"));
         
         auto& hdriManager = HDRIManager::Get();

@@ -46,14 +46,18 @@ namespace Donut
         
         m_SphereShader = Ref<Shader>(Shader::Create("Assets/Shaders/Sphere.glsl"));
         m_SkyboxShader = Ref<Shader>(Shader::Create("Assets/Shaders/Skybox.glsl"));
+        m_GridShader   = Ref<Shader>(Shader::Create("Assets/Shaders/Grid.glsl"));
         
         if (!m_SphereShader)
             DONUT_ERROR("Failed to create sphere shader");
         if (!m_SkyboxShader)
             DONUT_ERROR("Failed to create skybox shader");
+        if (!m_GridShader)
+            DONUT_ERROR("Failed to create grid shader");
         
         InitializeSphereGeometry();
         InitializeSkyboxGeometry();
+        InitializeGridGeometry();
         
         auto& hdriManager = HDRIManager::Get();
         m_HDRIEnvironment = hdriManager.GetCurrentHDRI();
@@ -68,6 +72,9 @@ namespace Donut
         Material blackHoleMaterial(glm::vec3(0.0f, 0.0f, 0.0f), 0.0f, 0.0f);
         m_BlackHole = Object(glm::vec3(0.0f, 0.0f, 0.0f), 2.0f, blackHoleMaterial);
         m_BlackHoleInitialized = true;
+        
+        // Set default grid size
+        m_GridSize = 10.0f;
         
         m_Initialized = true;
     }
@@ -116,6 +123,9 @@ namespace Donut
         
         if (m_HDRIEnvironment)
             RenderSkybox();
+        
+        if (m_ShowGrid)
+            RenderGrid();
         
         RenderScene();
     }
@@ -285,13 +295,13 @@ namespace Donut
             {
                 switch (e.GetKeyCode())
                 {
-                    case GLFW_KEY_W:
+                    case GLFW_KEY_M:
                         m_GizmoOperation = ImGuizmo::TRANSLATE;
                         return true;
-                    case GLFW_KEY_E:
+                    case GLFW_KEY_R:
                         m_GizmoOperation = ImGuizmo::ROTATE;
                         return true;
-                    case GLFW_KEY_R:
+                    case GLFW_KEY_S:
                         m_GizmoOperation = ImGuizmo::SCALE;
                         return true;
                 }
@@ -319,7 +329,7 @@ namespace Donut
         ImGui::PopFont();
         ImGui::Separator();
         
-                 if (ImGui::CollapsingHeader("Scene Info", &m_ShowSceneInfo))
+                 if (ImGui::CollapsingHeader("Scene Info"))
          {
             ImGui::Text("Objects in scene: %zu/16 (+ 1 black hole)", m_Scene.objs.size());
             
@@ -367,7 +377,7 @@ namespace Donut
         
         ImGui::Spacing();
         
-        if (ImGui::CollapsingHeader("Create Object", &m_ShowObjectCreator))
+        if (ImGui::CollapsingHeader("Create Object"))
         {
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "New Sphere");
             ImGui::Separator();
@@ -406,7 +416,7 @@ namespace Donut
         
         ImGui::Spacing();
         
-        if (ImGui::CollapsingHeader("Scene Objects", &m_ShowObjectList))
+        if (ImGui::CollapsingHeader("Scene Objects"))
         {
             if (m_BlackHoleInitialized)
             {
@@ -458,7 +468,7 @@ namespace Donut
 
         ImGui::Spacing();
          
-        if (ImGui::CollapsingHeader("Gizmo Controls", &m_ShowGizmoControls))
+        if (ImGui::CollapsingHeader("Gizmo Controls"))
         {
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Gizmo Operation:");
             
@@ -473,12 +483,12 @@ namespace Donut
             
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Hotkeys:");
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "W = Translate, E = Rotate, R = Scale");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "M = Move, R = Rotate, S = Scale");
         }
 
         ImGui::Spacing();
 
-        if (ImGui::CollapsingHeader("Selection Outline", &m_ShowOutlineControls))
+        if (ImGui::CollapsingHeader("Selection Outline"))
         {
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Outline Settings:");
 
@@ -490,6 +500,33 @@ namespace Donut
 
             ImGui::Spacing();
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "White rim around sphere silhouette");
+        }
+
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader("Grid Settings"))
+        {
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 1.0f, 1.0f), "Grid Settings:");
+
+            ImGui::Text("Show Grid:");
+            ImGui::SameLine();
+            ImGui::Checkbox("##ShowGrid", &m_ShowGrid);
+
+            ImGui::Text("Grid Color:");
+            ImGui::ColorEdit3("##GridColor", &m_GridColor.x);
+
+            ImGui::Text("Grid Alpha:");
+            ImGui::SliderFloat("##GridAlpha", &m_GridAlpha, 0.0f, 1.0f, "%.2f");
+
+            ImGui::Text("Grid Size:");
+            ImGui::SliderFloat("##GridSize", &m_GridSize, 1.0f, 500.0f, "%.1f");
+
+            ImGui::Spacing();
+            if (ImGui::Button("Regenerate Grid", ImVec2(ImGui::GetWindowWidth() - 20, 25)))
+                InitializeGridGeometry();
+
+            ImGui::Spacing();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Reference grid for spatial orientation");
         }
 
         ImGui::Spacing();
@@ -560,7 +597,7 @@ namespace Donut
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Camera: Left mouse = rotate, Scroll = zoom");
-        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Gizmo: W=Translate, E=Rotate, R=Scale");
+        ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "Gizmo: M=Move, R=Rotate, S=Scale");
         
         ImGui::End();
         
@@ -943,9 +980,7 @@ namespace Donut
     void WorldBuilderState::RenderSkybox()
     {
         if (!m_SkyboxShader || !m_SkyboxVAO || !m_HDRIEnvironment)
-        {
             return;
-        }
         
         GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
         int width, height;
@@ -969,6 +1004,110 @@ namespace Donut
         m_SkyboxVAO->Bind();
         RenderCommand::DrawArrays(36);
         
+        RenderCommand::EnableDepthTest();
+    }
+    
+    void WorldBuilderState::InitializeGridGeometry()
+    {
+        if (m_GridVAO)
+        {
+            m_GridVAO->Unbind();
+            m_GridVAO.reset();
+        }
+        
+        const float gridSize = 50.0f;
+        const int gridLines = 101;
+        const float halfSize = gridSize * 0.5f;
+        const float step = gridSize / (gridLines - 1);
+        
+        std::vector<float> vertices;
+        std::vector<uint32_t> indices;
+        
+        for (int i = 0; i < gridLines; ++i)
+        {
+            float z = -halfSize + i * step;
+            
+            vertices.push_back(-halfSize);
+            vertices.push_back(0.0f);
+            vertices.push_back(z);
+            
+            vertices.push_back(halfSize);
+            vertices.push_back(0.0f);
+            vertices.push_back(z);
+            
+            uint32_t baseIndex = static_cast<uint32_t>(vertices.size() / 3) - 2;
+            indices.push_back(baseIndex);
+            indices.push_back(baseIndex + 1);
+        }
+        
+        for (int i = 0; i < gridLines; ++i)
+        {
+            float x = -halfSize + i * step;
+            
+            vertices.push_back(x);
+            vertices.push_back(0.0f);
+            vertices.push_back(-halfSize);
+            
+            vertices.push_back(x);
+            vertices.push_back(0.0f);
+            vertices.push_back(halfSize);
+            
+            uint32_t baseIndex = static_cast<uint32_t>(vertices.size() / 3) - 2;
+            indices.push_back(baseIndex);
+            indices.push_back(baseIndex + 1);
+        }
+        
+        auto vertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(float))));
+        VertexBufferLayout layout;
+        layout.Push<float>(3);
+        vertexBuffer->SetLayout(layout);
+        
+        auto indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices.data(), static_cast<uint32_t>(indices.size())));
+        
+        m_GridVAO = Ref<VertexArray>(VertexArray::Create());
+        m_GridVAO->AddVertexBuffer(vertexBuffer);
+        m_GridVAO->SetIndexBuffer(indexBuffer);
+        
+        m_GridVAO->Unbind();
+    }
+    
+    void WorldBuilderState::RenderGrid()
+    {
+        if (!m_GridShader || !m_GridVAO)
+            return;
+        
+        GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        RenderCommand::SetViewport(0, 0, width, height);
+        RenderCommand::EnableDepthTest();
+        RenderCommand::EnableBlending();
+        
+        glm::mat4 view = m_Camera.GetViewMatrix();
+        glm::mat4 projection = m_Camera.GetProjectionMatrix();
+        glm::mat4 viewProjection = projection * view;
+        glm::mat4 transform = glm::mat4(1.0f);
+        
+        glm::vec3 cameraPos = m_Camera.GetOrbitalPosition();
+        
+        m_GridShader->Bind();
+        m_GridShader->SetMat4("u_ViewProjection", viewProjection);
+        m_GridShader->SetMat4("u_Transform", transform);
+        m_GridShader->SetFloat3("u_GridColor", m_GridColor);
+        m_GridShader->SetFloat("u_GridAlpha", m_GridAlpha);
+        m_GridShader->SetFloat("u_GridSize", m_GridSize);
+        m_GridShader->SetFloat3("u_CameraPos", cameraPos);
+        
+        m_GridVAO->Bind();
+        RenderCommand::DrawLines(m_GridVAO);
+        
+        // Clean up state to prevent conflicts with scene rendering
+        m_GridVAO->Unbind();
+        m_GridShader->Unbind();
+        RenderCommand::DisableBlending();
+        
+        // Ensure depth test is still enabled for scene rendering
         RenderCommand::EnableDepthTest();
     }
 };
